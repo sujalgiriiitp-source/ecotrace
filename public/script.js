@@ -211,6 +211,16 @@ function createEntryCard(entry) {
 
   attachTilt(card);
 
+  // Make card clickable for verification
+  card.style.cursor = 'pointer';
+  card.addEventListener('click', (e) => {
+    // Don't navigate if clicking on action buttons or links
+    if (e.target.matches('button, a, .entry-actions *')) {
+      return;
+    }
+    goToVerify(entry.id);
+  });
+
   return card;
 }
 
@@ -707,6 +717,11 @@ entriesContainer.addEventListener('click', (event) => {
       .catch(() => showToast('Failed to share link', 'error'));
   }
 });
+
+// ===== NAVIGATION =====
+function goToVerify(id) {
+  window.location.href = `verify.html?id=${id}`;
+}
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
