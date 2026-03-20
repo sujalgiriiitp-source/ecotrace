@@ -31,6 +31,15 @@
       "co2Emission": 67,
       "createdAt": "2026-03-20T04:23:05.137Z",
       "hash": "c4fd583d88cc0421d405a30cf5d579387aab90b5430c14d48153019bbb66cde9"
+    },
+    {
+      "id": "05ac2d54-7fa0-41c0-b09a-171268772be7",
+      "companyName": "Tesla",
+      "productName": "Model 3",
+      "co2Emission": 45,
+      "createdAt": "2026-03-20T06:27:00.383Z",
+      "hash": "7373ac2290ed59c5211231e9312e926287ee39899673e6cfae539aa3c96c08e7",
+      "txHash": null
     }
   ]
 }

@@ -1,31 +1,28 @@
 const form = document.getElementById('entryForm');
-const companyNameInput = document.getElementById('companyName');
-const productNameInput = document.getElementById('productName');
-const co2EmissionInput = document.getElementById('co2Emission');
 const submitButton = document.getElementById('submitButton');
-const formMessage = document.getElementById('formMessage');
 const entriesContainer = document.getElementById('entriesContainer');
 const totalEntries = document.getElementById('totalEntries');
 const totalEmissions = document.getElementById('totalEmissions');
 const loadingState = document.getElementById('loadingState');
+const toastContainer = document.getElementById('toastContainer');
 
 let entries = [];
 
-function setMessage(message, type = 'default') {
-  formMessage.textContent = message;
-  formMessage.classList.remove('error', 'success');
-  if (type === 'error') {
-    formMessage.classList.add('error');
-  }
-  if (type === 'success') {
-    formMessage.classList.add('success');
-  }
+function showToast(message, type = 'success') {
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = message;
+  toastContainer.appendChild(toast);
+
+  setTimeout(() => {
+    toast.remove();
+  }, 4000);
 }
 
 function calculateTotals() {
-  const totalEmissionValue = entries.reduce((sum, entry) => sum + Number(entry.co2Emission || 0), 0);
-  totalEntries.textContent = String(entries.length);
-  totalEmissions.textContent = totalEmissionValue.toFixed(2);
+  const total = entries.reduce((sum, entry) => sum + Number(entry.co2Emission || 0), 0);
+  totalEntries.textContent = entries.length;
+  totalEmissions.textContent = total.toFixed(2);
 }
 
 function createEntryCard(entry) {
@@ -33,26 +30,33 @@ function createEntryCard(entry) {
   card.className = 'entry-card';
 
   const verificationLink = `${window.location.origin}/verify.html?id=${encodeURIComponent(entry.id)}`;
+  const txHashDisplay = entry.txHash
+    ? `<p><strong>Blockchain:</strong> <span style="color: #00ff9f; font-size: 0.8rem;">Recorded ✅</span></p>`
+    : '';
 
   card.innerHTML = `
-    <p><strong>Company:</strong> ${entry.companyName}</p>
-    <p><strong>Product:</strong> ${entry.productName}</p>
-    <p><strong>CO2:</strong> ${entry.co2Emission} kg</p>
-    <p><strong>ID:</strong> ${entry.id}</p>
-    <p><strong>Hash:</strong> <span class="hash">${entry.hash}</span></p>
-    <p><a href="${verificationLink}" target="_blank" rel="noopener noreferrer">Open Verification</a></p>
-    <div class="qr-box" id="qr-${entry.id}"></div>
+    <p><strong>🏢 Company:</strong> ${entry.companyName}</p>
+    <p><strong>📦 Product:</strong> ${entry.productName}</p>
+    <p><strong>🌍 CO2:</strong> ${entry.co2Emission} kg</p>
+    <p><strong>🆔 ID:</strong> ${entry.id.substring(0, 12)}...</p>
+    ${txHashDisplay}
+    <p><a href="${verificationLink}" target="_blank" rel="noopener noreferrer">→ Verify Record</a></p>
+    <div class="qr-box" id="qr-${CSS.escape(entry.id)}"></div>
   `;
 
   const qrContainer = card.querySelector(`#qr-${CSS.escape(entry.id)}`);
   if (qrContainer && window.QRCode) {
-    new QRCode(qrContainer, {
-      text: verificationLink,
-      width: 120,
-      height: 120,
-      colorDark: '#111111',
-      colorLight: '#ffffff'
-    });
+    try {
+      new QRCode(qrContainer, {
+        text: verificationLink,
+        width: 120,
+        height: 120,
+        colorDark: '#111111',
+        colorLight: '#ffffff'
+      });
+    } catch (e) {
+      console.warn('QR generation skipped');
+    }
   }
 
   return card;
@@ -62,37 +66,34 @@ function renderEntries() {
   entriesContainer.innerHTML = '';
 
   if (entries.length === 0) {
-    entriesContainer.innerHTML = '<p class="muted">No records yet. Add your first carbon entry.</p>';
+    entriesContainer.innerHTML = '<p style="color: var(--muted); grid-column: 1/-1; text-align: center; padding: 40px;">No records yet. Add your first carbon entry above.</p>';
     calculateTotals();
     return;
   }
 
-  const sortedEntries = [...entries].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-  sortedEntries.forEach((entry) => {
-    const card = createEntryCard(entry);
-    entriesContainer.appendChild(card);
+  const sorted = [...entries].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  sorted.forEach((entry) => {
+    entriesContainer.appendChild(createEntryCard(entry));
   });
 
   calculateTotals();
 }
 
 async function loadEntries() {
-  loadingState.classList.remove('hidden');
   try {
     const response = await fetch('/entries');
     const result = await response.json();
 
     if (!response.ok || !result.success) {
-      throw new Error(result.message || 'Failed to load entries.');
+      throw new Error('Failed to load');
     }
 
     entries = Array.isArray(result.data) ? result.data : [];
     renderEntries();
   } catch (error) {
-    entriesContainer.innerHTML = `<p class="status-message error">${error.message || 'Unable to fetch records.'}</p>`;
+    entriesContainer.innerHTML = `<p style="color: var(--danger); grid-column: 1/-1;">Error loading records</p>`;
   } finally {
-    loadingState.classList.add('hidden');
+    loadingState.style.display = 'none';
   }
 }
 
@@ -100,54 +101,49 @@ async function addEntry(event) {
   event.preventDefault();
 
   const payload = {
-    companyName: companyNameInput.value.trim(),
-    productName: productNameInput.value.trim(),
-    co2Emission: Number(co2EmissionInput.value)
+    companyName: document.getElementById('companyName').value.trim(),
+    productName: document.getElementById('productName').value.trim(),
+    co2Emission: Number(document.getElementById('co2Emission').value)
   };
 
   if (!payload.companyName || !payload.productName || Number.isNaN(payload.co2Emission)) {
-    setMessage('Please fill in all fields with valid values.', 'error');
+    showToast('Please fill all fields correctly', 'error');
     return;
   }
 
   submitButton.disabled = true;
   submitButton.textContent = 'Adding...';
-  setMessage('Submitting record for verification...');
 
   try {
     const response = await fetch('/add', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
 
     const result = await response.json();
 
     if (!response.ok || !result.success) {
-      throw new Error(result.message || 'Failed to add record.');
+      throw new Error(result.message || 'Failed');
     }
 
-    const newEntry = {
+    entries.push({
       id: result.data.id,
       hash: result.data.hash,
+      txHash: result.data.txHash,
       companyName: result.data.companyName,
       productName: result.data.productName,
       co2Emission: result.data.co2Emission,
       createdAt: result.data.createdAt
-    };
+    });
 
-    entries.push(newEntry);
     renderEntries();
-
-    const verificationLink = `${window.location.origin}/verify.html?id=${encodeURIComponent(newEntry.id)}`;
-    setMessage(`Record verified. ID: ${newEntry.id} | Hash: ${newEntry.hash.slice(0, 12)}...`, 'success');
-
     form.reset();
-    console.log('Verification link:', verificationLink);
+
+    const msg = result.data.txHash ? '✅ Recorded on blockchain!' : '✅ Entry added!';
+    showToast(msg, 'success');
   } catch (error) {
-    setMessage(error.message || 'Something went wrong while adding the record.', 'error');
+    showToast(error.message || 'Error adding record', 'error');
   } finally {
     submitButton.disabled = false;
     submitButton.textContent = 'Add & Verify';

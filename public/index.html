@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>EcoTrace – Carbon Lifecycle Tracking</title>
+    <title>EcoTrace – Carbon Lifecycle Tracking & Verification</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -14,13 +14,15 @@
   </head>
   <body>
     <div class="bg-particles" aria-hidden="true"></div>
+    <div class="bg-glow" aria-hidden="true"></div>
+
     <main class="container">
       <section class="hero">
         <h1>EcoTrace 🌱</h1>
         <p>Making Carbon Data Verifiable & Transparent</p>
       </section>
 
-      <section class="card">
+      <section class="card form-card">
         <h2>Add New Carbon Record</h2>
         <form id="entryForm" class="entry-form">
           <div class="form-group floating-field">
@@ -34,25 +36,43 @@
           </div>
 
           <div class="form-group floating-field">
-            <input id="co2Emission" name="co2Emission" type="number" min="0" step="0.01" placeholder=" " required />
+            <input
+              id="co2Emission"
+              name="co2Emission"
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder=" "
+              required
+            />
             <label for="co2Emission">CO2 Emission (kg)</label>
           </div>
 
           <button type="submit" id="submitButton">Add & Verify</button>
         </form>
-        <p id="formMessage" class="status-message" aria-live="polite"></p>
+
+        <div id="toastContainer" class="toast-container"></div>
       </section>
 
-      <section class="dashboard card">
+      <section class="card dashboard-card">
         <div class="dashboard-header">
           <h2>Carbon Dashboard</h2>
           <div class="stats">
-            <span>Total Entries: <strong id="totalEntries">0</strong></span>
-            <span class="emission-highlight">Total Emissions: <strong id="totalEmissions">0</strong> kg</span>
+            <span class="stat-item">
+              <span class="stat-label">Total Entries</span>
+              <span class="stat-value" id="totalEntries">0</span>
+            </span>
+            <span class="stat-item emission-highlight">
+              <span class="stat-label">Total Emissions</span>
+              <span class="stat-value" id="totalEmissions">0</span> kg
+            </span>
           </div>
         </div>
 
-        <div id="loadingState" class="loading hidden">Loading records...</div>
+        <div id="loadingState" class="loading-spinner">
+          <div class="spinner"></div>
+          <p>Loading records...</p>
+        </div>
         <div id="entriesContainer" class="entries-grid"></div>
       </section>
     </main>

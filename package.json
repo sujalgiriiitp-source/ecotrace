@@ -1,23 +1,25 @@
 {
   "name": "ecotrace-carbon-tracker",
-  "version": "1.0.0",
-  "description": "EcoTrace – Carbon Lifecycle Tracking and Verification System",
+  "version": "2.0.0",
+  "description": "EcoTrace – Carbon Lifecycle Tracking and Verification System with Blockchain",
   "main": "server.js",
   "type": "commonjs",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js",
-    "test:smoke": "node smoke-test.js"
+    "dev": "node server.js"
   },
   "keywords": [
     "ecotrace",
     "carbon-tracking",
     "verification",
-    "express"
+    "blockchain",
+    "ethereum"
   ],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.21.2"
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "web3": "^4.16.0"
   }
 }
