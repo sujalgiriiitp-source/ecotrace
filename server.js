@@ -194,7 +194,7 @@ app.get('/entries', async (req, res) => {
   }
 });
 
-app.use((error, req, res) => {
+app.use((error, req, res, next) => {
   console.error('Unhandled error:', error);
   res.status(500).json({
     success: false,

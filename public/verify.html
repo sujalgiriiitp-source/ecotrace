@@ -68,12 +68,12 @@
                 <button class="copy-btn" id="copyHashBtn" title="Copy hash">📋 Copy</button>
               </div>
             </div>
-            <div class="verify-row" id="txHashRow" class="hidden">
+            <div class="verify-row hidden" id="txHashRow">
               <span class="verify-label">⛓️ Blockchain Tx</span>
               <div class="hash-container blockchain-tx">
                 <code id="vTxHash" class="hash"></code>
                 <button class="copy-btn" id="copyTxBtn" title="Copy tx hash">📋 Copy</button>
-                <a id="etherscanLink" href="#" target="_blank" rel="noopener noreferrer" class="etherscan-btn" title="View on Etherscan">🔍 View</a>
+                <a id="etherscanLink" href="#" target="_blank" rel="noopener noreferrer" class="etherscan-btn" title="View on Etherscan">🔍 View on Blockchain</a>
               </div>
             </div>
             <div class="verify-row">
@@ -94,6 +94,7 @@
       </section>
     </main>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="verify.js"></script>
   </body>
 </html>

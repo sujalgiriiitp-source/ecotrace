@@ -58,6 +58,33 @@
       "createdAt": "2026-03-20T06:37:30.233Z",
       "hash": "9901ddf200a0a982e68cd95f442611a97a4ebc3924ae114226b0f8e244d231b1",
       "txHash": null
+    },
+    {
+      "id": "dbeabc83-8d2f-4990-9490-896cc8e2dd41",
+      "companyName": "Ather",
+      "productName": "Battery Pack",
+      "co2Emission": 18.5,
+      "createdAt": "2026-03-20T07:39:44.601Z",
+      "hash": "9394efc5ded089ed860927fa0a975901c05a63ec3cc84742a68ed85fef58dc27",
+      "txHash": null
+    },
+    {
+      "id": "2cced584-b3b3-478c-b0a2-49c27d0d104b",
+      "companyName": "SteelCorp",
+      "productName": "Industrial Slab",
+      "co2Emission": 210.75,
+      "createdAt": "2026-03-20T07:39:44.610Z",
+      "hash": "360065781097c93c62dca4b671212b59964a07da06fc85b14f0ceb07948a1acb",
+      "txHash": null
+    },
+    {
+      "id": "19c87cf7-625e-4291-aa0e-7922b431a9ee",
+      "companyName": "GreenFoods",
+      "productName": "Organic Snack",
+      "co2Emission": 9.2,
+      "createdAt": "2026-03-20T07:39:44.616Z",
+      "hash": "9b916f8b150b5c117d85ac55166ef3c0caf662b6ea8f02cba02ea4ed70ec4586",
+      "txHash": null
     }
   ]
 }

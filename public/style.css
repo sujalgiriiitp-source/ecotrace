@@ -371,6 +371,11 @@ body {
   box-shadow: 0 0 10px rgba(0, 195, 255, 0.3);
 }
 
+.export-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .export-btn:active {
   transform: scale(0.95);
 }
@@ -399,6 +404,23 @@ body {
   gap: 12px;
   margin-top: 15px;
   flex-wrap: wrap;
+}
+
+.anomaly-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 190, 92, 0.35);
+  background: rgba(255, 190, 92, 0.08);
+  color: #ffd88f;
+  font-size: 0.85rem;
+}
+
+.anomaly-toggle input {
+  accent-color: #ffbe5c;
 }
 
 .filter-input,
@@ -448,6 +470,8 @@ body {
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  transform-style: preserve-3d;
+  will-change: transform;
 }
 
 .entry-card::before {
@@ -492,6 +516,81 @@ body {
 .entry-card a:hover {
   text-decoration: underline;
   text-shadow: 0 0 10px var(--accent);
+}
+
+.tx-short {
+  color: var(--accent-cyan);
+  font-family: 'Monaco', 'Courier New', monospace;
+  font-size: 0.8rem;
+}
+
+.entry-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.mini-copy {
+  padding: 6px 10px;
+  font-size: 0.75rem;
+}
+
+.immutable-mini {
+  font-size: 0.78rem;
+  color: var(--accent);
+  opacity: 0.95;
+  margin-top: 10px;
+}
+
+.anomaly-badge {
+  margin: 8px 0;
+  padding: 6px 10px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #ffd88f;
+  border: 1px solid rgba(255, 190, 92, 0.5);
+  background: rgba(255, 190, 92, 0.12);
+  box-shadow: 0 0 10px rgba(255, 190, 92, 0.15);
+}
+
+.skeleton-card {
+  pointer-events: none;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.skeleton-line,
+.skeleton-box {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.06) 25%, rgba(255, 255, 255, 0.12) 50%, rgba(255, 255, 255, 0.06) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+  border-radius: 8px;
+}
+
+.skeleton-line {
+  height: 12px;
+  margin-bottom: 12px;
+}
+
+.skeleton-box {
+  height: 96px;
+  margin-top: 8px;
+}
+
+.w-70 {
+  width: 70%;
+}
+
+.w-60 {
+  width: 60%;
+}
+
+.w-40 {
+  width: 40%;
 }
 
 .qr-box {
@@ -934,6 +1033,15 @@ body {
   to {
     opacity: 1;
     transform: translateX(0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
   }
 }
 

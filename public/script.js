@@ -11,13 +11,17 @@ const avgEmission = document.getElementById('avgEmission');
 const loadingState = document.getElementById('loadingState');
 const toastContainer = document.getElementById('toastContainer');
 const exportBtn = document.getElementById('exportBtn');
+const importBtn = document.getElementById('importBtn');
+const csvInput = document.getElementById('csvInput');
 const emissionsChartCanvas = document.getElementById('emissionsChart');
 const filterInput = document.getElementById('filterInput');
 const sortSelect = document.getElementById('sortSelect');
+const anomalyOnly = document.getElementById('anomalyOnly');
 
 let entries = [];
 let chartInstance = null;
 let displayedEntries = [];
+let anomalyMap = new Map();
 
 // ===== TOAST NOTIFICATIONS =====
 function showToast(message, type = 'success') {
@@ -47,6 +51,38 @@ function calculateTotals() {
   updateChart();
 }
 
+function buildAnomalyMap(records) {
+  const values = records
+    .map((record) => Number(record.co2Emission))
+    .filter((value) => Number.isFinite(value) && value > 0);
+
+  if (values.length < 2) {
+    return new Map();
+  }
+
+  const avg = values.reduce((sum, value) => sum + value, 0) / values.length;
+  const variance = values.reduce((sum, value) => sum + (value - avg) ** 2, 0) / values.length;
+  const stdDev = Math.sqrt(variance);
+
+  const threshold = stdDev > 0 ? avg + (1.4 * stdDev) : avg * 1.4;
+  const result = new Map();
+
+  records.forEach((record) => {
+    const value = Number(record.co2Emission);
+    if (!Number.isFinite(value)) {
+      return;
+    }
+    result.set(record.id, {
+      isAnomaly: value >= threshold,
+      threshold,
+      avg,
+      stdDev
+    });
+  });
+
+  return result;
+}
+
 function animateCounter(element, target) {
   const current = parseInt(element.textContent) || 0;
   const duration = 600;
@@ -73,8 +109,25 @@ function createEntryCard(entry) {
   card.className = 'entry-card';
 
   const verificationLink = `${window.location.origin}/verify.html?id=${encodeURIComponent(entry.id)}`;
+  const createdAt = new Date(entry.createdAt).toLocaleString();
+  const shortHash = entry.hash ? `${entry.hash.slice(0, 12)}...${entry.hash.slice(-6)}` : 'N/A';
+  const shortTx = entry.txHash ? `${entry.txHash.slice(0, 10)}...${entry.txHash.slice(-8)}` : null;
+  const explorerUrl = entry.txHash ? `https://sepolia.etherscan.io/tx/${entry.txHash}` : null;
+  const anomalyMeta = anomalyMap.get(entry.id);
+  const anomalyBadge = anomalyMeta?.isAnomaly
+    ? `<p class="anomaly-badge" title="High emission outlier detected">⚠️ AI Flag: High CO2 Anomaly</p>`
+    : '';
   const blockchainBadge = entry.txHash
     ? `<p style="color: var(--accent); font-weight: 600; margin: 8px 0;"><span style="font-size: 1.1rem;">✅</span> Recorded on Blockchain</p>`
+    : '';
+  const blockchainMeta = entry.txHash
+    ? `
+      <p><strong>⛓️ Tx:</strong> <span class="tx-short" title="${entry.txHash}">${shortTx}</span></p>
+      <div class="entry-actions">
+        <button type="button" class="copy-btn mini-copy" data-copy="${entry.txHash}">📋 Copy Tx</button>
+        <a href="${explorerUrl}" target="_blank" rel="noopener noreferrer" class="etherscan-btn">🔍 View on Blockchain</a>
+      </div>
+    `
     : '';
 
   card.innerHTML = `
@@ -82,9 +135,15 @@ function createEntryCard(entry) {
     <p><strong>📦 Product:</strong> ${entry.productName}</p>
     <p><strong>🌍 CO2:</strong> ${entry.co2Emission} kg</p>
     <p><strong>🆔 ID:</strong> ${entry.id.substring(0, 10)}...</p>
+    <p><strong>🕒 Timestamp:</strong> ${createdAt}</p>
+    <p><strong>🔐 SHA256:</strong> <span class="tx-short" title="${entry.hash}">${shortHash}</span></p>
+    ${anomalyBadge}
     ${blockchainBadge}
+    ${blockchainMeta}
+    <p class="immutable-mini">Immutable Record – Cannot be Modified</p>
     <p style="margin-top: 12px;"><a href="${verificationLink}" target="_blank" rel="noopener noreferrer">→ Verify & View Details</a></p>
     <div class="qr-box" id="qr-${CSS.escape(entry.id)}"></div>
+    <p class="qr-label">Scan to Verify</p>
   `;
 
   // Generate QR Code
@@ -103,7 +162,39 @@ function createEntryCard(entry) {
     }
   }
 
+  attachTilt(card);
+
   return card;
+}
+
+function attachTilt(card) {
+  card.addEventListener('mousemove', (event) => {
+    const rect = card.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    const rotateX = ((y / rect.height) - 0.5) * -8;
+    const rotateY = ((x / rect.width) - 0.5) * 8;
+    card.style.transform = `perspective(800px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) translateY(-6px)`;
+  });
+
+  card.addEventListener('mouseleave', () => {
+    card.style.transform = '';
+  });
+}
+
+function renderSkeletonCards(count = 6) {
+  entriesContainer.innerHTML = '';
+  for (let index = 0; index < count; index += 1) {
+    const skeleton = document.createElement('article');
+    skeleton.className = 'entry-card skeleton-card';
+    skeleton.innerHTML = `
+      <div class="skeleton-line w-70"></div>
+      <div class="skeleton-line w-60"></div>
+      <div class="skeleton-line w-40"></div>
+      <div class="skeleton-box"></div>
+    `;
+    entriesContainer.appendChild(skeleton);
+  }
 }
 
 // ===== CHART VISUALIZATION =====
@@ -236,14 +327,19 @@ function exportToCSV() {
 
 // ===== FILTER & SORT =====
 function filterAndSort() {
-  const filterText = filterInput.value.toLowerCase();
-  const sortValue = sortSelect.value;
+  const filterText = filterInput ? filterInput.value.toLowerCase() : '';
+  const sortValue = sortSelect ? sortSelect.value : 'newest';
+  const anomalyOnlyEnabled = anomalyOnly ? anomalyOnly.checked : false;
 
   // Filter
   displayedEntries = entries.filter(entry =>
     entry.companyName.toLowerCase().includes(filterText) ||
     entry.productName.toLowerCase().includes(filterText)
   );
+
+  if (anomalyOnlyEnabled) {
+    displayedEntries = displayedEntries.filter((entry) => anomalyMap.get(entry.id)?.isAnomaly);
+  }
 
   // Sort
   displayedEntries.sort((a, b) => {
@@ -282,7 +378,7 @@ function renderEntries() {
 // ===== FETCH ENTRIES =====
 async function loadEntries() {
   loadingState.style.display = 'block';
-  entriesContainer.innerHTML = '';
+  renderSkeletonCards();
 
   try {
     const response = await fetch('/entries');
@@ -293,9 +389,10 @@ async function loadEntries() {
     }
 
     entries = Array.isArray(result.data) ? result.data : [];
+    anomalyMap = buildAnomalyMap(entries);
     displayedEntries = [...entries];
     calculateTotals();
-    renderEntries();
+    filterAndSort();
   } catch (error) {
     entriesContainer.innerHTML = `
       <p style="color: var(--danger); grid-column: 1/-1; text-align: center; padding: 40px;">
@@ -306,6 +403,63 @@ async function loadEntries() {
   } finally {
     loadingState.style.display = 'none';
   }
+}
+
+function parseCsvText(csvText) {
+  const lines = csvText
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  if (lines.length < 2) {
+    return [];
+  }
+
+  const rows = lines.slice(1);
+  return rows
+    .map((line) => {
+      const [companyName, productName, co2Emission] = line.split(',').map((part) => part.trim().replace(/^"|"$/g, ''));
+      return {
+        companyName,
+        productName,
+        co2Emission: Number(co2Emission)
+      };
+    })
+    .filter((record) => record.companyName && record.productName && Number.isFinite(record.co2Emission) && record.co2Emission > 0);
+}
+
+async function importCsvRecords(file) {
+  const text = await file.text();
+  const records = parseCsvText(text);
+
+  if (records.length === 0) {
+    showToast('No valid rows found. Expected CSV: companyName,productName,co2Emission', 'error');
+    return;
+  }
+
+  importBtn.disabled = true;
+  importBtn.textContent = 'Importing...';
+
+  let successCount = 0;
+  for (const record of records) {
+    try {
+      const response = await fetch('/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(record)
+      });
+      const result = await response.json();
+      if (response.ok && result.success) {
+        successCount += 1;
+      }
+    } catch (_error) {
+    }
+  }
+
+  await loadEntries();
+  showToast(`Imported ${successCount}/${records.length} records`, successCount > 0 ? 'success' : 'error');
+  importBtn.disabled = false;
+  importBtn.textContent = '📤 Import CSV';
 }
 
 // ===== SUBMIT FORM =====
@@ -395,6 +549,46 @@ if (filterInput) {
 if (sortSelect) {
   sortSelect.addEventListener('change', filterAndSort);
 }
+
+if (anomalyOnly) {
+  anomalyOnly.addEventListener('change', filterAndSort);
+}
+
+if (importBtn && csvInput) {
+  importBtn.addEventListener('click', () => csvInput.click());
+  csvInput.addEventListener('change', async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+    await importCsvRecords(file);
+    csvInput.value = '';
+  });
+}
+
+entriesContainer.addEventListener('click', (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLElement)) {
+    return;
+  }
+  if (target.matches('.mini-copy')) {
+    const value = target.getAttribute('data-copy');
+    if (!value) {
+      return;
+    }
+    navigator.clipboard.writeText(value)
+      .then(() => {
+        const previous = target.textContent;
+        target.textContent = '✓ Copied';
+        setTimeout(() => {
+          target.textContent = previous;
+        }, 1600);
+      })
+      .catch(() => {
+        showToast('Failed to copy transaction hash', 'error');
+      });
+  }
+});
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {

@@ -112,6 +112,8 @@
         <div class="chart-header">
           <h2>📈 Emissions Timeline</h2>
           <div class="chart-controls">
+            <input id="csvInput" type="file" accept=".csv,text/csv" hidden />
+            <button id="importBtn" class="export-btn" title="Import records from CSV">📤 Import CSV</button>
             <button id="exportBtn" class="export-btn" title="Export as CSV">📥 Export Data</button>
           </div>
         </div>
@@ -131,6 +133,10 @@
               <option value="co2-high">Highest CO2</option>
               <option value="co2-low">Lowest CO2</option>
             </select>
+            <label class="anomaly-toggle">
+              <input type="checkbox" id="anomalyOnly" />
+              Show only anomalies
+            </label>
           </div>
         </div>
 
