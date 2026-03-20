@@ -13,17 +13,26 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
+    <div class="particle-bg">
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+    </div>
     <div class="bg-particles" aria-hidden="true"></div>
     <div class="bg-glow" aria-hidden="true"></div>
+    <div class="gradient-glow" aria-hidden="true"></div>
 
     <main class="container">
       <section class="hero">
         <h1>EcoTrace 🌱</h1>
         <p>Making Carbon Data Verifiable & Transparent</p>
+        <p class="hero-subtext">Immutable records on Ethereum blockchain</p>
       </section>
 
       <section class="card form-card">
-        <h2>Add New Carbon Record</h2>
+        <h2>📝 Record Carbon Entry</h2>
         <form id="entryForm" class="entry-form">
           <div class="form-group floating-field">
             <input id="companyName" name="companyName" type="text" placeholder=" " required />
@@ -48,25 +57,49 @@
             <label for="co2Emission">CO2 Emission (kg)</label>
           </div>
 
-          <button type="submit" id="submitButton">Add & Verify</button>
+          <button type="submit" id="submitButton" class="btn-primary">
+            <span class="btn-text">Store & Verify on Blockchain</span>
+            <span class="btn-loader" style="display: none;">
+              <span class="spinner-inline"></span>
+            </span>
+          </button>
         </form>
 
         <div id="toastContainer" class="toast-container"></div>
       </section>
 
+      <section class="stats-section">
+        <div class="stat-box stats-card">
+          <div class="stat-icon">📊</div>
+          <div class="stat-content">
+            <span class="stat-label">Total Entries</span>
+            <span class="stat-value" id="totalEntries">0</span>
+          </div>
+        </div>
+
+        <div class="stat-box stats-card">
+          <div class="stat-icon">🌍</div>
+          <div class="stat-content">
+            <span class="stat-label">Total CO2 Tracked</span>
+            <div class="stat-value-group">
+              <span class="stat-value" id="totalEmissions">0</span>
+              <span class="stat-unit">kg</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-box stats-card">
+          <div class="stat-icon">⛓️</div>
+          <div class="stat-content">
+            <span class="stat-label">Blockchain Verified</span>
+            <span class="stat-value" id="blockchainCount">0</span>
+          </div>
+        </div>
+      </section>
+
       <section class="card dashboard-card">
         <div class="dashboard-header">
-          <h2>Carbon Dashboard</h2>
-          <div class="stats">
-            <span class="stat-item">
-              <span class="stat-label">Total Entries</span>
-              <span class="stat-value" id="totalEntries">0</span>
-            </span>
-            <span class="stat-item emission-highlight">
-              <span class="stat-label">Total Emissions</span>
-              <span class="stat-value" id="totalEmissions">0</span> kg
-            </span>
-          </div>
+          <h2>📋 Recent Records</h2>
         </div>
 
         <div id="loadingState" class="loading-spinner">

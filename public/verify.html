@@ -13,13 +13,21 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
+    <div class="particle-bg">
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+    </div>
     <div class="bg-particles" aria-hidden="true"></div>
     <div class="bg-glow" aria-hidden="true"></div>
+    <div class="gradient-glow" aria-hidden="true"></div>
 
     <main class="container verify-page">
       <section class="card verify-card">
         <div class="verify-header">
-          <h1>EcoTrace Verification</h1>
+          <h1>✔ EcoTrace Verification</h1>
           <p class="verify-subtitle">Blockchain-Verified Record</p>
         </div>
 
@@ -31,43 +39,58 @@
         <p id="verifyError" class="status-message error hidden"></p>
 
         <div id="verifyContent" class="hidden">
-          <div class="verified-badge-large">✔ Verified</div>
+          <div class="verified-badge-large">
+            <span class="pulse"></span>
+            ✔ Verified
+          </div>
 
           <div class="verify-details">
             <div class="verify-row">
-              <span class="verify-label">Product Name</span>
-              <strong id="vProduct"></strong>
-            </div>
-            <div class="verify-row">
-              <span class="verify-label">Company Name</span>
+              <span class="verify-label">🏢 Company</span>
               <strong id="vCompany"></strong>
             </div>
             <div class="verify-row">
-              <span class="verify-label">CO2 Emission</span>
+              <span class="verify-label">📦 Product</span>
+              <strong id="vProduct"></strong>
+            </div>
+            <div class="verify-row">
+              <span class="verify-label">🌍 CO2 Emission</span>
               <strong id="vEmission"></strong>
             </div>
             <div class="verify-row">
-              <span class="verify-label">SHA256 Hash</span>
+              <span class="verify-label">📅 Timestamp</span>
+              <strong id="vTimestamp"></strong>
+            </div>
+            <div class="verify-row">
+              <span class="verify-label">🆔 SHA256 Hash</span>
               <div class="hash-container">
                 <code id="vHash" class="hash"></code>
-                <button class="copy-btn" id="copyHashBtn" title="Copy hash">📋</button>
+                <button class="copy-btn" id="copyHashBtn" title="Copy hash">📋 Copy</button>
               </div>
             </div>
             <div class="verify-row" id="txHashRow" class="hidden">
-              <span class="verify-label">Blockchain Tx Hash</span>
-              <div class="hash-container">
+              <span class="verify-label">⛓️ Blockchain Tx</span>
+              <div class="hash-container blockchain-tx">
                 <code id="vTxHash" class="hash"></code>
-                <button class="copy-btn" id="copyTxBtn" title="Copy tx hash">📋</button>
+                <button class="copy-btn" id="copyTxBtn" title="Copy tx hash">📋 Copy</button>
+                <a id="etherscanLink" href="#" target="_blank" rel="noopener noreferrer" class="etherscan-btn" title="View on Etherscan">🔍 View</a>
               </div>
             </div>
             <div class="verify-row">
-              <span class="verify-label">Status</span>
-              <span class="verified-badge" id="vStatus">Verified</span>
+              <span class="verify-label">✓ Status</span>
+              <span class="verified-badge pulse-badge" id="vStatus">Verified on Blockchain</span>
             </div>
           </div>
 
           <p class="immutable-label">⛓️ Immutable Record – Cannot be Modified</p>
+          <p class="trust-label">Recorded permanently on Ethereum Sepolia Testnet</p>
         </div>
+      </section>
+
+      <section class="card qr-section" id="qrSection" style="display: none; text-align: center;">
+        <h3>📱 Scan to Share</h3>
+        <div id="qrDisplay"></div>
+        <p class="qr-label">Scan to verify this record</p>
       </section>
     </main>
 
