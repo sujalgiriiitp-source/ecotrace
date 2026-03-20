@@ -8,6 +8,7 @@ const totalEntries = document.getElementById('totalEntries');
 const totalEmissions = document.getElementById('totalEmissions');
 const blockchainCount = document.getElementById('blockchainCount');
 const avgEmission = document.getElementById('avgEmission');
+const companyRanking = document.getElementById('companyRanking');
 const loadingState = document.getElementById('loadingState');
 const toastContainer = document.getElementById('toastContainer');
 const exportBtn = document.getElementById('exportBtn');
@@ -16,6 +17,10 @@ const csvInput = document.getElementById('csvInput');
 const emissionsChartCanvas = document.getElementById('emissionsChart');
 const filterInput = document.getElementById('filterInput');
 const sortSelect = document.getElementById('sortSelect');
+const minEmissionInput = document.getElementById('minEmission');
+const maxEmissionInput = document.getElementById('maxEmission');
+const startDateInput = document.getElementById('startDate');
+const endDateInput = document.getElementById('endDate');
 const anomalyOnly = document.getElementById('anomalyOnly');
 
 let entries = [];
@@ -49,6 +54,7 @@ function calculateTotals() {
   animateCounter(avgEmission, parseFloat(avg.toFixed(2)));
   
   updateChart();
+  updateCompanyRanking();
 }
 
 function buildAnomalyMap(records) {
@@ -84,7 +90,7 @@ function buildAnomalyMap(records) {
 }
 
 function animateCounter(element, target) {
-  const current = parseInt(element.textContent) || 0;
+  const current = parseFloat(element.textContent) || 0;
   const duration = 600;
   const increment = (target - current) / (duration / 16);
   let value = current;
@@ -95,12 +101,49 @@ function animateCounter(element, target) {
       (increment > 0 && value >= target) ||
       (increment < 0 && value <= target)
     ) {
-      element.textContent = target.toFixed(element === totalEmissions ? 2 : 0);
+      element.textContent = target.toFixed(element === totalEmissions || element === avgEmission ? 2 : 0);
       clearInterval(timer);
     } else {
-      element.textContent = value.toFixed(element === totalEmissions ? 2 : 0);
+      element.textContent = value.toFixed(element === totalEmissions || element === avgEmission ? 2 : 0);
     }
   }, 16);
+}
+
+function updateCompanyRanking() {
+  if (!companyRanking) {
+    return;
+  }
+
+  const aggregate = new Map();
+  entries.forEach((entry) => {
+    const current = aggregate.get(entry.companyName) || { total: 0, count: 0 };
+    current.total += Number(entry.co2Emission) || 0;
+    current.count += 1;
+    aggregate.set(entry.companyName, current);
+  });
+
+  const ranked = [...aggregate.entries()]
+    .map(([name, meta]) => ({
+      name,
+      total: meta.total,
+      average: meta.total / meta.count
+    }))
+    .sort((a, b) => a.total - b.total)
+    .slice(0, 5);
+
+  if (ranked.length === 0) {
+    companyRanking.innerHTML = '<p class="muted">No ranking data available yet.</p>';
+    return;
+  }
+
+  companyRanking.innerHTML = ranked
+    .map((item, index) => `
+      <div class="ranking-item">
+        <strong>#${index + 1} ${item.name}</strong>
+        <span>${item.total.toFixed(2)} kg total · ${item.average.toFixed(2)} avg</span>
+      </div>
+    `)
+    .join('');
 }
 
 // ===== CARD CREATION =====
@@ -144,6 +187,10 @@ function createEntryCard(entry) {
     <p style="margin-top: 12px;"><a href="${verificationLink}" target="_blank" rel="noopener noreferrer">→ Verify & View Details</a></p>
     <div class="qr-box" id="qr-${CSS.escape(entry.id)}"></div>
     <p class="qr-label">Scan to Verify</p>
+    <div class="entry-actions">
+      <button type="button" class="copy-btn mini-copy share-qr">📤 Share QR</button>
+      <button type="button" class="copy-btn mini-copy download-qr">⬇️ Download QR</button>
+    </div>
   `;
 
   // Generate QR Code
@@ -329,6 +376,10 @@ function exportToCSV() {
 function filterAndSort() {
   const filterText = filterInput ? filterInput.value.toLowerCase() : '';
   const sortValue = sortSelect ? sortSelect.value : 'newest';
+  const minEmission = minEmissionInput?.value ? Number(minEmissionInput.value) : null;
+  const maxEmission = maxEmissionInput?.value ? Number(maxEmissionInput.value) : null;
+  const startDate = startDateInput?.value ? new Date(`${startDateInput.value}T00:00:00`) : null;
+  const endDate = endDateInput?.value ? new Date(`${endDateInput.value}T23:59:59`) : null;
   const anomalyOnlyEnabled = anomalyOnly ? anomalyOnly.checked : false;
 
   // Filter
@@ -339,6 +390,22 @@ function filterAndSort() {
 
   if (anomalyOnlyEnabled) {
     displayedEntries = displayedEntries.filter((entry) => anomalyMap.get(entry.id)?.isAnomaly);
+  }
+
+  if (minEmission !== null && Number.isFinite(minEmission)) {
+    displayedEntries = displayedEntries.filter((entry) => Number(entry.co2Emission) >= minEmission);
+  }
+
+  if (maxEmission !== null && Number.isFinite(maxEmission)) {
+    displayedEntries = displayedEntries.filter((entry) => Number(entry.co2Emission) <= maxEmission);
+  }
+
+  if (startDate) {
+    displayedEntries = displayedEntries.filter((entry) => new Date(entry.createdAt) >= startDate);
+  }
+
+  if (endDate) {
+    displayedEntries = displayedEntries.filter((entry) => new Date(entry.createdAt) <= endDate);
   }
 
   // Sort
@@ -516,8 +583,8 @@ async function addEntry(event) {
 
     // Show success message
     const message = result.data.txHash
-      ? '✅ Stored on Blockchain! Record is immutable.'
-      : '✅ Entry added successfully!';
+      ? `✅ Stored on Blockchain! Hash: ${result.data.hash.slice(0, 10)}...`
+      : `✅ Entry added! Hash: ${result.data.hash.slice(0, 10)}...`;
     showToast(message, 'success');
 
     // Scroll to new entry
@@ -550,6 +617,22 @@ if (sortSelect) {
   sortSelect.addEventListener('change', filterAndSort);
 }
 
+if (minEmissionInput) {
+  minEmissionInput.addEventListener('input', filterAndSort);
+}
+
+if (maxEmissionInput) {
+  maxEmissionInput.addEventListener('input', filterAndSort);
+}
+
+if (startDateInput) {
+  startDateInput.addEventListener('change', filterAndSort);
+}
+
+if (endDateInput) {
+  endDateInput.addEventListener('change', filterAndSort);
+}
+
 if (anomalyOnly) {
   anomalyOnly.addEventListener('change', filterAndSort);
 }
@@ -571,7 +654,7 @@ entriesContainer.addEventListener('click', (event) => {
   if (!(target instanceof HTMLElement)) {
     return;
   }
-  if (target.matches('.mini-copy')) {
+  if (target.matches('.mini-copy[data-copy]')) {
     const value = target.getAttribute('data-copy');
     if (!value) {
       return;
@@ -587,6 +670,41 @@ entriesContainer.addEventListener('click', (event) => {
       .catch(() => {
         showToast('Failed to copy transaction hash', 'error');
       });
+  }
+
+  if (target.matches('.download-qr')) {
+    const card = target.closest('.entry-card');
+    const canvas = card?.querySelector('.qr-box canvas');
+    if (!(canvas instanceof HTMLCanvasElement)) {
+      showToast('QR not ready yet', 'error');
+      return;
+    }
+    const anchor = document.createElement('a');
+    anchor.href = canvas.toDataURL('image/png');
+    anchor.download = `ecotrace-qr-${Date.now()}.png`;
+    anchor.click();
+    showToast('QR downloaded', 'success');
+  }
+
+  if (target.matches('.share-qr')) {
+    const card = target.closest('.entry-card');
+    const link = card?.querySelector('a[href*="verify.html"]')?.getAttribute('href');
+    if (!link) {
+      showToast('Verification link unavailable', 'error');
+      return;
+    }
+    const absoluteLink = link.startsWith('http') ? link : `${window.location.origin}${link}`;
+    if (navigator.share) {
+      navigator.share({
+        title: 'EcoTrace Verification QR',
+        text: 'Don’t trust claims. Verify emissions.',
+        url: absoluteLink
+      }).catch(() => {});
+      return;
+    }
+    navigator.clipboard.writeText(absoluteLink)
+      .then(() => showToast('Verification link copied', 'success'))
+      .catch(() => showToast('Failed to share link', 'error'));
   }
 });
 

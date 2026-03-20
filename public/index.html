@@ -27,8 +27,22 @@
     <main class="container">
       <section class="hero">
         <h1>EcoTrace 🌱</h1>
-        <p>Making Carbon Data Verifiable & Transparent</p>
-        <p class="hero-subtext">Immutable records on Ethereum blockchain</p>
+        <p>Blockchain-based carbon transparency system</p>
+        <p class="hero-subtext">Don’t trust claims. Verify emissions.</p>
+        <p class="hero-problem">Built to fight greenwashing with tamper-proof carbon evidence.</p>
+      </section>
+
+      <section class="card story-card">
+        <h2>🌍 Why EcoTrace matters</h2>
+        <p>
+          Companies can publish sustainability claims without proof. EcoTrace prevents greenwashing by
+          anchoring carbon records with cryptographic hashes and blockchain transaction evidence.
+        </p>
+        <div class="trust-pills">
+          <span>🔒 Tamper-proof system</span>
+          <span>⛓️ On-chain verifiable proof</span>
+          <span>📱 QR-based instant verification</span>
+        </div>
       </section>
 
       <section class="card form-card">
@@ -122,6 +136,13 @@
         </div>
       </section>
 
+      <section class="card ranking-card">
+        <div class="chart-header">
+          <h2>🏆 Company Emission Ranking</h2>
+        </div>
+        <div id="companyRanking" class="ranking-list"></div>
+      </section>
+
       <section class="card dashboard-card">
         <div class="dashboard-header">
           <h2>📋 Recent Records</h2>
@@ -133,6 +154,10 @@
               <option value="co2-high">Highest CO2</option>
               <option value="co2-low">Lowest CO2</option>
             </select>
+            <input type="number" id="minEmission" class="filter-input" placeholder="Min CO2" min="0" step="0.01" />
+            <input type="number" id="maxEmission" class="filter-input" placeholder="Max CO2" min="0" step="0.01" />
+            <input type="date" id="startDate" class="sort-select" />
+            <input type="date" id="endDate" class="sort-select" />
             <label class="anomaly-toggle">
               <input type="checkbox" id="anomalyOnly" />
               Show only anomalies
@@ -145,6 +170,18 @@
           <p>Loading records...</p>
         </div>
         <div id="entriesContainer" class="entries-grid"></div>
+      </section>
+
+      <section class="card demo-card">
+        <h2>🎬 Demo Flow</h2>
+        <ol class="demo-steps">
+          <li>Add a new product emission entry</li>
+          <li>Generate instant SHA256 fingerprint</li>
+          <li>Store proof and get blockchain transaction hash</li>
+          <li>Generate and scan QR code live</li>
+          <li>Open verification page instantly</li>
+          <li>Show immutable proof + on-chain status</li>
+        </ol>
       </section>
     </main>
 

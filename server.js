@@ -13,6 +13,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 let web3Instance = null;
+let contractInstance = null;
 
 async function initWeb3() {
   try {
@@ -28,6 +29,19 @@ async function initWeb3() {
     const account = web3.eth.accounts.privateKeyToAccount(privKey);
     web3.eth.accounts.wallet.add(account);
 
+    const contractAddress = process.env.CONTRACT_ADDRESS;
+    const contractAbiRaw = process.env.CONTRACT_ABI;
+    if (contractAddress && contractAbiRaw) {
+      try {
+        const parsedAbi = JSON.parse(contractAbiRaw);
+        contractInstance = new web3.eth.Contract(parsedAbi, contractAddress);
+        console.log('✅ Smart contract loaded:', contractAddress);
+      } catch (contractError) {
+        contractInstance = null;
+        console.warn('⚠️  Contract init failed:', contractError.message);
+      }
+    }
+
     web3Instance = { web3, account };
     console.log('✅ Blockchain connected:', account.address);
     return web3Instance;
@@ -42,6 +56,24 @@ async function storeOnBlockchain(entryData) {
 
   try {
     const { web3, account } = web3Instance;
+    if (contractInstance) {
+      const methodCandidates = [
+        () => contractInstance.methods.storeHash(entryData.hash),
+        () => contractInstance.methods.recordHash(entryData.hash),
+        () => contractInstance.methods.registerRecord(entryData.hash, entryData.id)
+      ];
+
+      for (const buildMethod of methodCandidates) {
+        try {
+          const contractMethod = buildMethod();
+          const gas = await contractMethod.estimateGas({ from: account.address });
+          const receipt = await contractMethod.send({ from: account.address, gas: Number(gas) + 20000 });
+          return receipt.transactionHash;
+        } catch (_methodError) {
+        }
+      }
+    }
+
     const dataString = JSON.stringify(entryData);
     const dataHex = web3.utils.utf8ToHex(dataString);
 
@@ -50,7 +82,7 @@ async function storeOnBlockchain(entryData) {
       to: account.address,
       value: '0',
       data: dataHex,
-      gas: 100000
+      gas: 120000
     };
 
     const signed = await web3.eth.accounts.signTransaction(tx, account.privateKey);

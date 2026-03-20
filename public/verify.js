@@ -47,6 +47,7 @@ async function loadVerification() {
     document.getElementById('vEmission').textContent = `${item.co2Emission} kg`;
     document.getElementById('vTimestamp').textContent = new Date(item.createdAt).toLocaleString();
     document.getElementById('vHash').textContent = item.hash;
+    document.getElementById('vStatus').textContent = item.txHash ? 'Verified on Blockchain' : 'Hash Verified';
 
     // Copy hash button
     const copyHashBtn = document.getElementById('copyHashBtn');

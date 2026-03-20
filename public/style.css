@@ -124,6 +124,33 @@ body {
   animation: fadeInUp 1s ease-out 0.2s both;
 }
 
+.hero-problem {
+  font-size: 0.95rem;
+  color: #ffd88f;
+  margin-top: 8px;
+}
+
+.story-card p {
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.trust-pills {
+  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.trust-pills span {
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 255, 159, 0.25);
+  background: rgba(0, 255, 159, 0.08);
+  color: var(--accent);
+  font-size: 0.82rem;
+}
+
 /* Cards */
 .card {
   background: rgba(255, 255, 255, 0.05);
@@ -390,6 +417,30 @@ body {
   max-height: 350px;
 }
 
+.ranking-list {
+  display: grid;
+  gap: 10px;
+}
+
+.ranking-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 255, 159, 0.2);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.ranking-item strong {
+  color: var(--text);
+}
+
+.ranking-item span {
+  color: var(--accent-cyan);
+  font-weight: 600;
+}
+
 /* Dashboard */
 .dashboard-card {
   animation-delay: 0.2s;
@@ -421,6 +472,21 @@ body {
 
 .anomaly-toggle input {
   accent-color: #ffbe5c;
+}
+
+.demo-card {
+  margin-top: 10px;
+}
+
+.demo-steps {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--muted);
+  line-height: 1.8;
+}
+
+.demo-steps li::marker {
+  color: var(--accent);
 }
 
 .filter-input,
@@ -837,6 +903,11 @@ body {
   color: var(--muted);
   font-size: 0.85rem;
   margin: 10px 0 0;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 0.9rem;
 }
 
 .hidden {
