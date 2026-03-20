@@ -32,14 +32,29 @@ async function loadVerification() {
   }
 
   try {
-    const response = await fetch(`/get/${encodeURIComponent(id)}`);
-    const result = await response.json();
+    let item = null;
 
-    if (!response.ok || !result.success) {
-      throw new Error(result.message || 'Unable to verify record.');
+    // Try to fetch from server first
+    try {
+      const response = await fetch(`/get/${encodeURIComponent(id)}`);
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        item = result.data;
+      }
+    } catch (serverError) {
+      // Fallback to localStorage if server fails
+      const data = JSON.parse(localStorage.getItem('ecoData')) || [];
+      item = data.find(d => d.id === id);
+      
+      if (!item) {
+        throw new Error('Record not found in local storage.');
+      }
     }
 
-    const item = result.data;
+    if (!item) {
+      throw new Error('Unable to verify record.');
+    }
 
     // Populate details
     document.getElementById('vCompany').textContent = item.companyName;
