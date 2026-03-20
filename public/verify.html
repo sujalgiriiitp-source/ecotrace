@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EcoTrace Verification</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="bg-particles" aria-hidden="true"></div>
+    <main class="container verify-page">
+      <section class="card verify-card">
+        <h1>EcoTrace Verification</h1>
+        <p class="muted">Record authenticity check</p>
+
+        <div id="verifyLoading" class="loading">Verifying record...</div>
+        <p id="verifyError" class="status-message error hidden"></p>
+
+        <div id="verifyContent" class="hidden">
+          <div class="verified-badge" aria-live="polite">Verified ✅</div>
+          <div class="verify-row"><span>Product Name:</span> <strong id="vProduct"></strong></div>
+          <div class="verify-row"><span>Company Name:</span> <strong id="vCompany"></strong></div>
+          <div class="verify-row"><span>CO2 Emission:</span> <strong id="vEmission"></strong></div>
+          <div class="verify-row"><span>Hash:</span> <strong id="vHash" class="hash"></strong></div>
+          <div class="verify-row"><span>Verification Status:</span> <strong class="verified" id="vStatus"></strong></div>
+
+          <p class="immutable-label"><span aria-hidden="true">⛓️</span> Immutable Record – Cannot be Modified</p>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const loading = document.getElementById('verifyLoading');
+      const errorBox = document.getElementById('verifyError');
+      const content = document.getElementById('verifyContent');
+
+      async function loadVerification() {
+        const params = new URLSearchParams(window.location.search);
+        const id = params.get('id');
+
+        if (!id) {
+          loading.classList.add('hidden');
+          errorBox.textContent = 'Missing record ID in URL.';
+          errorBox.classList.remove('hidden');
+          return;
+        }
+
+        try {
+          const response = await fetch(`/get/${encodeURIComponent(id)}`);
+          const result = await response.json();
+
+          if (!response.ok || !result.success) {
+            throw new Error(result.message || 'Unable to verify record.');
+          }
+
+          const item = result.data;
+
+          document.getElementById('vProduct').textContent = item.productName;
+          document.getElementById('vCompany').textContent = item.companyName;
+          document.getElementById('vEmission').textContent = `${item.co2Emission} kg`;
+          document.getElementById('vHash').textContent = item.hash;
+          document.getElementById('vStatus').textContent = item.verificationStatus || 'Verified';
+
+          content.classList.remove('hidden');
+        } catch (error) {
+          errorBox.textContent = error.message || 'Verification failed.';
+          errorBox.classList.remove('hidden');
+        } finally {
+          loading.classList.add('hidden');
+        }
+      }
+
+      loadVerification();
+    </script>
+  </body>
+</html>

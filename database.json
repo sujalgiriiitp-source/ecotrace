@@ -1,0 +1,36 @@
+{
+  "entries": [
+    {
+      "id": "3a677c89-b12a-4b82-b950-ed76c8e30708",
+      "companyName": "Nike",
+      "productName": "Shoes",
+      "co2Emission": 20,
+      "createdAt": "2026-03-20T04:00:34.355Z",
+      "hash": "c1528a74d49a22489bea3efc7d5d5299a14c6cba342f87455800c5bde805d9e5"
+    },
+    {
+      "id": "517cd1c0-2f72-4202-8a0a-79bc32be3b43",
+      "companyName": "UI Test Co",
+      "productName": "Neon Widget",
+      "co2Emission": 12.34,
+      "createdAt": "2026-03-20T04:12:22.199Z",
+      "hash": "8dd382e244071cc8ebe88683874479df7541e83e40a747528eb5eda2c04256f5"
+    },
+    {
+      "id": "f6009ec6-211a-44fd-8c83-2faaf96497cd",
+      "companyName": "Nike",
+      "productName": "Shoes",
+      "co2Emission": 67,
+      "createdAt": "2026-03-20T04:17:59.173Z",
+      "hash": "75b6481ba82803571d311ba919abc56c93254c38fc27740c9c635c0703551ebb"
+    },
+    {
+      "id": "cae97c89-8abc-428d-9457-76d88563f652",
+      "companyName": "Nike",
+      "productName": "Shoes",
+      "co2Emission": 67,
+      "createdAt": "2026-03-20T04:23:05.137Z",
+      "hash": "c4fd583d88cc0421d405a30cf5d579387aab90b5430c14d48153019bbb66cde9"
+    }
+  ]
+}

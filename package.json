@@ -1,0 +1,23 @@
+{
+  "name": "ecotrace-carbon-tracker",
+  "version": "1.0.0",
+  "description": "EcoTrace – Carbon Lifecycle Tracking and Verification System",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test:smoke": "node smoke-test.js"
+  },
+  "keywords": [
+    "ecotrace",
+    "carbon-tracking",
+    "verification",
+    "express"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
