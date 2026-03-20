@@ -95,11 +95,43 @@
             <span class="stat-value" id="blockchainCount">0</span>
           </div>
         </div>
+
+        <div class="stat-box stats-card">
+          <div class="stat-icon">📈</div>
+          <div class="stat-content">
+            <span class="stat-label">Avg CO2 Per Entry</span>
+            <div class="stat-value-group">
+              <span class="stat-value" id="avgEmission">0</span>
+              <span class="stat-unit">kg</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card chart-card">
+        <div class="chart-header">
+          <h2>📈 Emissions Timeline</h2>
+          <div class="chart-controls">
+            <button id="exportBtn" class="export-btn" title="Export as CSV">📥 Export Data</button>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas id="emissionsChart"></canvas>
+        </div>
       </section>
 
       <section class="card dashboard-card">
         <div class="dashboard-header">
           <h2>📋 Recent Records</h2>
+          <div class="dashboard-controls">
+            <input type="text" id="filterInput" class="filter-input" placeholder="🔍 Search by company or product..." />
+            <select id="sortSelect" class="sort-select">
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+              <option value="co2-high">Highest CO2</option>
+              <option value="co2-low">Lowest CO2</option>
+            </select>
+          </div>
         </div>
 
         <div id="loadingState" class="loading-spinner">
@@ -111,6 +143,7 @@
     </main>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script src="script.js"></script>
   </body>
 </html>

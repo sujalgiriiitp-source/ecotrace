@@ -332,6 +332,59 @@ body {
   align-items: baseline;
 }
 
+/* Chart Card */
+.chart-card {
+  animation-delay: 0.15s;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.chart-header h2 {
+  margin: 0;
+}
+
+.chart-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.export-btn {
+  background: rgba(0, 195, 255, 0.1);
+  border: 1px solid rgba(0, 195, 255, 0.3);
+  color: var(--accent-cyan);
+  padding: 8px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.export-btn:hover {
+  background: rgba(0, 195, 255, 0.2);
+  box-shadow: 0 0 10px rgba(0, 195, 255, 0.3);
+}
+
+.export-btn:active {
+  transform: scale(0.95);
+}
+
+.chart-container {
+  position: relative;
+  height: 350px;
+  margin: 20px 0;
+}
+
+#emissionsChart {
+  max-height: 350px;
+}
+
 /* Dashboard */
 .dashboard-card {
   animation-delay: 0.2s;
@@ -339,6 +392,44 @@ body {
 
 .dashboard-header {
   margin-bottom: 30px;
+}
+
+.dashboard-controls {
+  display: flex;
+  gap: 12px;
+  margin-top: 15px;
+  flex-wrap: wrap;
+}
+
+.filter-input,
+.sort-select {
+  flex: 1;
+  min-width: 200px;
+  padding: 10px 15px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(0, 255, 159, 0.3);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.filter-input::placeholder {
+  color: var(--muted);
+}
+
+.filter-input:focus,
+.sort-select:focus {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--accent);
+  box-shadow: 0 0 10px rgba(0, 255, 159, 0.2);
+  outline: none;
+}
+
+.sort-select option {
+  background: #0a0a0a;
+  color: var(--text);
 }
 
 .entries-grid {
