@@ -151,7 +151,8 @@ function createEntryCard(entry) {
   const card = document.createElement('article');
   card.className = 'entry-card';
 
-  const verificationLink = `${window.location.origin}/verify.html?id=${encodeURIComponent(entry.id)}`;
+  const id = encodeURIComponent(entry.id);
+  const verificationLink = `https://ecotrace-ibnh.onrender.com/verify.html?id=${id}`;
   const createdAt = new Date(entry.createdAt).toLocaleString();
   const shortHash = entry.hash ? `${entry.hash.slice(0, 12)}...${entry.hash.slice(-6)}` : 'N/A';
   const shortTx = entry.txHash ? `${entry.txHash.slice(0, 10)}...${entry.txHash.slice(-8)}` : null;
@@ -720,7 +721,8 @@ entriesContainer.addEventListener('click', (event) => {
 
 // ===== NAVIGATION =====
 function goToVerify(id) {
-  window.location.href = `verify.html?id=${id}`;
+  const url = `https://ecotrace-ibnh.onrender.com/verify.html?id=${encodeURIComponent(id)}`;
+  window.location.href = url;
 }
 
 // Initialize

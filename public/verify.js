@@ -92,7 +92,7 @@ async function loadVerification() {
     // Generate QR code for sharing
     if (qrDisplay && window.QRCode) {
       qrDisplay.innerHTML = '';
-      const qrLink = `${window.location.href}`;
+      const qrLink = `https://ecotrace-ibnh.onrender.com/verify.html?id=${encodeURIComponent(id)}`;
       new QRCode(qrDisplay, {
         text: qrLink,
         width: 180,
