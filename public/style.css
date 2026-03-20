@@ -40,8 +40,8 @@ body::after {
 body::before {
   content: "";
   position: fixed;
-  width: 500px;
-  height: 500px;
+  width: 600px;
+  height: 600px;
   background: radial-gradient(#00ff9f33, transparent);
   top: 20%;
   left: 30%;
@@ -77,15 +77,21 @@ body::after {
 
 .card {
   position: relative;
-  border-radius: var(--radius);
-  padding: 24px;
-  background: linear-gradient(125deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01));
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
+  padding: 20px;
+  border: 1px solid rgba(0, 255, 159, 0.2);
+  box-shadow: 0 0 20px rgba(0, 255, 159, 0.1);
+  transition: 0.3s;
+  -webkit-backdrop-filter: blur(12px);
   animation: fadeInUp 0.7s ease both;
   overflow: hidden;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0 30px rgba(0, 255, 159, 0.3);
 }
 
 .card::before {
@@ -104,20 +110,18 @@ body::after {
 
 .hero {
   text-align: center;
-  padding-block: 30px;
+  padding: 40px 20px;
 }
 
 .hero h1 {
   margin: 0;
-  font-size: clamp(2rem, 5vw, 2.9rem);
-  color: var(--accent);
-  letter-spacing: 0.02em;
-  text-shadow: 0 0 24px rgba(0, 255, 159, 0.4);
+  font-size: 2.5rem;
+  color: #00ff9f;
 }
 
 .hero p {
-  margin: 9px 0 0;
-  color: var(--muted);
+  opacity: 0.7;
+  margin-top: 10px;
 }
 
 h2 {
@@ -136,11 +140,11 @@ h2 {
 
 .floating-field input {
   width: 100%;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(5, 5, 5, 0.5);
-  color: var(--text);
-  border-radius: 14px;
+  background: transparent;
+  border: 1px solid #00ff9f;
   padding: 20px 14px 9px;
+  border-radius: 8px;
+  color: white;
   font: inherit;
   transition: border-color 0.32s ease, box-shadow 0.32s ease, transform 0.28s ease;
 }
@@ -161,8 +165,8 @@ h2 {
 
 .floating-field input:focus,
 .floating-field input:not(:placeholder-shown) {
-  border-color: rgba(0, 255, 159, 0.8);
-  box-shadow: 0 0 0 4px rgba(0, 255, 159, 0.12), 0 0 24px rgba(0, 255, 159, 0.2);
+  outline: none;
+  box-shadow: 0 0 10px #00ff9f;
 }
 
 .floating-field input:focus + label,
@@ -173,23 +177,18 @@ h2 {
 }
 
 button {
-  margin-top: 6px;
+  background: linear-gradient(45deg, #00ff9f, #00c3ff);
   border: none;
-  border-radius: 14px;
-  padding: 12px 16px;
-  font: inherit;
-  font-weight: 600;
+  padding: 12px;
+  border-radius: 10px;
+  color: black;
+  font-weight: bold;
   cursor: pointer;
-  color: #032318;
-  background: linear-gradient(90deg, #00ff9f 0%, #4dffbf 100%);
-  box-shadow: 0 10px 26px rgba(0, 255, 159, 0.2);
-  transition: transform 0.24s ease, box-shadow 0.24s ease, filter 0.24s ease, opacity 0.2s ease;
+  transition: 0.3s;
 }
 
 button:hover {
-  transform: scale(1.02) translateY(-1px);
-  box-shadow: 0 0 24px rgba(0, 255, 159, 0.45), 0 16px 28px rgba(0, 0, 0, 0.35);
-  filter: brightness(1.06);
+  transform: scale(1.05);
 }
 
 button:active {
@@ -403,7 +402,7 @@ button:disabled {
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 768px) {
   .container {
     margin: 18px auto 36px;
     gap: 14px;
@@ -415,8 +414,12 @@ button:disabled {
     padding: 18px;
   }
 
+  .card {
+    margin: 10px;
+  }
+
   .hero h1 {
-    font-size: 2rem;
+    font-size: 1.8rem;
   }
 
   .stats {
