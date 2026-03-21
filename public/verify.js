@@ -4,6 +4,12 @@ const content = document.getElementById('verifyContent');
 const qrSection = document.getElementById('qrSection');
 const qrDisplay = document.getElementById('qrDisplay');
 
+function generateHash(data) {
+  return CryptoJS.SHA256(
+    data.company + data.product + data.co2 + data.timestamp
+  ).toString();
+}
+
 // ===== COPY TO CLIPBOARD =====
 function copyToClipboard(text, button) {
   navigator.clipboard.writeText(text).then(() => {
@@ -16,6 +22,56 @@ function copyToClipboard(text, button) {
     }, 2000);
   }).catch(() => {
     alert('Failed to copy');
+  });
+}
+
+function renderJourneyTrace(journey = [], createdAt = '') {
+  const host = document.getElementById('verifyContent');
+  if (!host) {
+    return;
+  }
+
+  let section = document.getElementById('journeyTraceSection');
+  if (!section) {
+    section = document.createElement('section');
+    section.id = 'journeyTraceSection';
+    section.className = 'card';
+    section.style.marginTop = '18px';
+    section.innerHTML = '<h3 style="margin: 0 0 12px; color: var(--accent);">🧭 Journey Trace</h3><div id="journeyTraceList"></div>';
+    host.appendChild(section);
+  }
+
+  const list = document.getElementById('journeyTraceList');
+  if (!list) {
+    return;
+  }
+
+  list.innerHTML = '';
+  const steps = Array.isArray(journey) ? journey : [];
+  if (steps.length === 0) {
+    list.innerHTML = '<p class="muted">No journey data available.</p>';
+    return;
+  }
+
+  steps.forEach((step, index) => {
+    const rawStatus = String(step.status || 'Success');
+    const isStepVerified = /verified|success/i.test(rawStatus) && !/tampered|failed/i.test(rawStatus);
+    const statusText = isStepVerified ? 'Verified' : 'Tampered';
+    const statusClass = isStepVerified ? 'valid' : 'invalid';
+    const timestamp = step.timestamp || createdAt;
+    const row = document.createElement('div');
+    row.className = 'verify-row';
+    row.style.flexDirection = 'column';
+    row.style.alignItems = 'flex-start';
+    row.style.gap = '6px';
+    row.style.marginBottom = '10px';
+    row.innerHTML = `
+      <strong>${index + 1}. ${step.step || 'Step'} • ${step.location || 'Unknown'}</strong>
+      <span>CO2: ${Number(step.co2 || 0).toFixed(2)} kg</span>
+      <span>Timestamp: ${timestamp ? new Date(timestamp).toLocaleString() : 'N/A'}</span>
+      <span class="${statusClass}">Status: ${statusText}</span>
+    `;
+    list.appendChild(row);
   });
 }
 
@@ -32,37 +88,49 @@ async function loadVerification() {
   }
 
   try {
-    let item = null;
+    const response = await fetch('/entries');
+    const result = await response.json();
+    const data = Array.isArray(result?.data) ? result.data : [];
+    const item = data.find(d => d.id === id);
 
-    // Try to fetch from server first
-    try {
-      const response = await fetch(`/get/${encodeURIComponent(id)}`);
-      const result = await response.json();
-
-      if (response.ok && result.success) {
-        item = result.data;
-      }
-    } catch (serverError) {
-      // Fallback to localStorage if server fails
-      const data = JSON.parse(localStorage.getItem('ecoData')) || [];
-      item = data.find(d => d.id === id);
-      
-      if (!item) {
-        throw new Error('Record not found in local storage.');
-      }
-    }
+    const statusElement = document.getElementById('status') || document.getElementById('vStatus');
 
     if (!item) {
-      throw new Error('Unable to verify record.');
+      if (statusElement) {
+        statusElement.innerText = 'Record not found ❌';
+      }
+      loading.style.display = 'none';
+      content.classList.remove('hidden');
+      return;
+    }
+
+    const verificationData = {
+      company: item.company || item.companyName || '',
+      product: item.product || item.productName || '',
+      co2: String(item.co2 || item.co2Emission || ''),
+      timestamp: item.timestamp || item.createdAt || ''
+    };
+
+    const newHash = generateHash(verificationData);
+
+    console.log('Stored:', item.hash);
+    console.log('New:', newHash);
+
+    if (statusElement) {
+      if (newHash === item.hash) {
+        statusElement.innerText = 'Verified ✅';
+      } else {
+        statusElement.innerText = 'Tampered ❌';
+      }
     }
 
     // Populate details
-    document.getElementById('vCompany').textContent = item.companyName;
-    document.getElementById('vProduct').textContent = item.productName;
-    document.getElementById('vEmission').textContent = `${item.co2Emission} kg`;
-    document.getElementById('vTimestamp').textContent = new Date(item.createdAt).toLocaleString();
+    document.getElementById('vCompany').textContent = item.companyName || item.company || 'N/A';
+    document.getElementById('vProduct').textContent = item.productName || item.product || 'N/A';
+    document.getElementById('vEmission').textContent = `${item.co2Emission || item.co2 || 'N/A'} kg`;
+    document.getElementById('vTimestamp').textContent = new Date(item.createdAt || item.timestamp).toLocaleString();
     document.getElementById('vHash').textContent = item.hash;
-    document.getElementById('vStatus').textContent = item.txHash ? 'Verified on Blockchain' : 'Hash Verified';
+    renderJourneyTrace(item.journey, item.createdAt || item.timestamp);
 
     // Copy hash button
     const copyHashBtn = document.getElementById('copyHashBtn');

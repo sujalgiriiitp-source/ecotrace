@@ -28,6 +28,12 @@ let chartInstance = null;
 let displayedEntries = [];
 let anomalyMap = new Map();
 
+function generateHash(data) {
+  return CryptoJS.SHA256(
+    data.company + data.product + data.co2 + data.timestamp
+  ).toString();
+}
+
 // ===== TOAST NOTIFICATIONS =====
 function showToast(message, type = 'success') {
   const toast = document.createElement('div');
@@ -151,6 +157,15 @@ function createEntryCard(entry) {
   const card = document.createElement('article');
   card.className = 'entry-card';
 
+  const hashInput = {
+    company: entry.company || entry.companyName || '',
+    product: entry.product || entry.productName || '',
+    co2: String(entry.co2 || entry.co2Emission || ''),
+    timestamp: entry.timestamp || entry.createdAt || ''
+  };
+  const newHash = generateHash(hashInput);
+  const isValid = newHash === entry.hash;
+
   const id = encodeURIComponent(entry.id);
   const verificationLink = `https://ecotrace-ibnh.onrender.com/verify.html?id=${id}`;
   const createdAt = new Date(entry.createdAt).toLocaleString();
@@ -181,11 +196,15 @@ function createEntryCard(entry) {
     <p><strong>🆔 ID:</strong> ${entry.id.substring(0, 10)}...</p>
     <p><strong>🕒 Timestamp:</strong> ${createdAt}</p>
     <p><strong>🔐 SHA256:</strong> <span class="tx-short" title="${entry.hash}">${shortHash}</span></p>
+    <p><strong>✅ Integrity:</strong> <span class="status ${isValid ? 'valid' : 'invalid'}">${isValid ? 'Verified ✅' : 'Tampered ❌'}</span></p>
     ${anomalyBadge}
     ${blockchainBadge}
     ${blockchainMeta}
     <p class="immutable-mini">Immutable Record – Cannot be Modified</p>
     <p style="margin-top: 12px;"><a href="${verificationLink}" target="_blank" rel="noopener noreferrer">→ Verify & View Details</a></p>
+    <div class="entry-actions">
+      <button type="button" class="copy-btn mini-copy trace-journey" data-id="${entry.id}">🧭 View Trace Journey</button>
+    </div>
     <div class="qr-box" id="qr-${CSS.escape(entry.id)}"></div>
     <p class="qr-label">Scan to Verify</p>
     <div class="entry-actions">
@@ -665,6 +684,16 @@ entriesContainer.addEventListener('click', (event) => {
   if (!(target instanceof HTMLElement)) {
     return;
   }
+
+  if (target.matches('.trace-journey')) {
+    const traceId = target.getAttribute('data-id');
+    if (!traceId) {
+      return;
+    }
+    window.location.href = `/trace.html?id=${encodeURIComponent(traceId)}`;
+    return;
+  }
+
   if (target.matches('.mini-copy[data-copy]')) {
     const value = target.getAttribute('data-copy');
     if (!value) {

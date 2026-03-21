@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EcoTrace Journey</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      .timeline {
+        position: relative;
+        margin-top: 14px;
+        padding-left: 28px;
+      }
+
+      .timeline::before {
+        content: '';
+        position: absolute;
+        left: 10px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: linear-gradient(180deg, rgba(0, 255, 159, 0.5), rgba(0, 195, 255, 0.35));
+      }
+
+      .timeline-item {
+        position: relative;
+        margin-bottom: 14px;
+      }
+
+      .timeline-dot {
+        position: absolute;
+        left: -22px;
+        top: 14px;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #00ff88;
+        box-shadow: 0 0 10px rgba(0, 255, 136, 0.55);
+      }
+
+      .timeline-dot.tampered {
+        background: #ff4d4f;
+        box-shadow: 0 0 10px rgba(255, 77, 79, 0.5);
+      }
+
+      .timeline-card {
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        border-radius: 12px;
+        padding: 12px 14px;
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .timeline-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 6px;
+      }
+
+      .timeline-row:last-child {
+        margin-bottom: 0;
+      }
+
+      .timeline-label {
+        color: var(--muted);
+      }
+
+      .timeline-status {
+        font-weight: 600;
+      }
+
+      .timeline-status.verified {
+        color: #00ff88;
+      }
+
+      .timeline-status.tampered {
+        color: #ff4d4f;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="particle-bg">
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+    </div>
+
+    <main class="container verify-page">
+      <section class="card verify-card" style="max-width: 760px;">
+        <div class="verify-header">
+          <h1>🧭 Trace Journey</h1>
+          <p class="verify-subtitle">Product lifecycle transparency</p>
+          <a href="index.html" class="back-btn">← Back to Dashboard</a>
+        </div>
+
+        <p id="traceError" class="status-message error hidden"></p>
+
+        <div id="traceContent" class="hidden">
+          <div class="verify-details">
+            <div class="verify-row">
+              <span class="verify-label">🏢 Company</span>
+              <strong id="tCompany"></strong>
+            </div>
+            <div class="verify-row">
+              <span class="verify-label">📦 Product</span>
+              <strong id="tProduct"></strong>
+            </div>
+            <div class="verify-row">
+              <span class="verify-label">🌍 Total CO2</span>
+              <strong id="tTotalCo2"></strong>
+            </div>
+          </div>
+
+          <h3 style="margin: 18px 0 10px; color: var(--accent);">Journey Steps</h3>
+          <div id="journeyList" class="timeline"></div>
+        </div>
+      </section>
+    </main>
+
+    <script src="trace.js"></script>
+  </body>
+</html>

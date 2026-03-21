@@ -109,7 +109,16 @@ async function readDatabase() {
 
   try {
     const data = JSON.parse(raw || '{}');
-    return Array.isArray(data.entries) ? data : { entries: [] };
+    if (!Array.isArray(data.entries)) {
+      return { entries: [] };
+    }
+
+    data.entries = data.entries.map((entry) => ({
+      ...entry,
+      journey: normalizeJourney(entry)
+    }));
+
+    return data;
   } catch {
     return { entries: [] };
   }
@@ -124,13 +133,49 @@ function generateId() {
 }
 
 function generateHash(entry) {
-  const payload = `${entry.id}|${entry.companyName}|${entry.productName}|${entry.co2Emission}|${entry.createdAt}`;
+  const payload = `${entry.companyName}${entry.productName}${entry.co2Emission}${entry.createdAt}`;
   return crypto.createHash('sha256').update(payload).digest('hex');
+}
+
+function buildDefaultJourney(totalEmission, baseTimestamp = new Date().toISOString()) {
+  const emission = Number(totalEmission) || 0;
+  const production = Number((emission * 0.4).toFixed(2));
+  const transport = Number((emission * 0.2).toFixed(2));
+  const storage = Number((emission * 0.2).toFixed(2));
+  const delivered = Number((emission - production - transport - storage).toFixed(2));
+
+  return [
+    { location: 'Factory', step: 'Production', co2: production, timestamp: baseTimestamp, status: 'Verified' },
+    { location: 'Transit Hub', step: 'Transport', co2: transport, timestamp: baseTimestamp, status: 'Verified' },
+    { location: 'Warehouse', step: 'Storage', co2: storage, timestamp: baseTimestamp, status: 'Verified' },
+    { location: 'City', step: 'Delivery', co2: delivered, timestamp: baseTimestamp, status: 'Verified' }
+  ];
+}
+
+function normalizeJourney(entry) {
+  if (!Array.isArray(entry.journey) || entry.journey.length === 0) {
+    return buildDefaultJourney(entry.co2Emission, entry.createdAt || new Date().toISOString());
+  }
+
+  return entry.journey.map((step, index) => {
+    const rawStatus = String(step.status || '').trim();
+    const normalizedStatus = /verified|success|tampered|failed/i.test(rawStatus)
+      ? rawStatus
+      : 'Success';
+
+    return {
+      location: step.location || 'Unknown',
+      step: step.step || rawStatus || `Step ${index + 1}`,
+      co2: Number(step.co2) || 0,
+      timestamp: step.timestamp || entry.createdAt || new Date().toISOString(),
+      status: normalizedStatus
+    };
+  });
 }
 
 app.post('/add', async (req, res) => {
   try {
-    const { companyName, productName, co2Emission } = req.body;
+    const { companyName, productName, co2Emission, journey } = req.body;
 
     if (!companyName || !productName || co2Emission === undefined) {
       return res.status(400).json({
@@ -152,8 +197,11 @@ app.post('/add', async (req, res) => {
       companyName: String(companyName).trim(),
       productName: String(productName).trim(),
       co2Emission: parsedEmission,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      journey: Array.isArray(journey) && journey.length > 0 ? journey : buildDefaultJourney(parsedEmission)
     };
+
+    entry.journey = normalizeJourney(entry);
 
     entry.hash = generateHash(entry);
     entry.txHash = await storeOnBlockchain(entry);
@@ -172,7 +220,8 @@ app.post('/add', async (req, res) => {
         companyName: entry.companyName,
         productName: entry.productName,
         co2Emission: entry.co2Emission,
-        createdAt: entry.createdAt
+        createdAt: entry.createdAt,
+        journey: entry.journey
       }
     });
   } catch (error) {
@@ -224,6 +273,10 @@ app.get('/entries', async (req, res) => {
       message: 'Failed to fetch entries.'
     });
   }
+});
+
+app.get('/trace', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'trace.html'));
 });
 
 app.use((error, req, res, next) => {
