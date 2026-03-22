@@ -97,11 +97,18 @@ function calculateCO2(distance, mode = 'truck') {
 }
 
 function renderJourney(tracePayload) {
-  const payload = {
-    ...tracePayload,
-    journey: Array.isArray(tracePayload?.journey) ? tracePayload.journey : []
+  // 🔥 Direct minimal data (no journey in URL)
+  const productId = tracePayload?.productId || 'N/A';
+  const destination = tracePayload?.destination || 'unknown';
+  const totalCO2 = tracePayload?.totalCO2 || 0;
+  
+  const minimalData = {
+    productId,
+    destination,
+    totalCO2
   };
-  const encoded = encodeURIComponent(JSON.stringify(payload));
+  
+  const encoded = encodeURIComponent(JSON.stringify(minimalData));
   window.location.href = `/trace.html?data=${encoded}`;
 }
 

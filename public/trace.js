@@ -320,12 +320,12 @@ async function loadStoredTrace(id) {
 }
 
 
-// --- Direct data rendering: no DB fetch required 🔥 ---
+// --- Direct minimal data rendering: reconstruct journey from API 🔥 ---
 async function loadTraceJourney() {
   const params = new URLSearchParams(window.location.search);
   const dataParam = params.get('data');
 
-  // 🔥 Direct data use (no DB fetch)
+  // 🔥 Direct minimal data (productId, destination, totalCO2)
   if (!dataParam) {
     document.body.innerHTML = '<h2 style="color: #ff5579; text-align: center; margin-top: 40px;">❌ No trace data found. Please generate a trace first.</h2>';
     return;
@@ -334,25 +334,41 @@ async function loadTraceJourney() {
   setState('Loading trace...', 'loading');
 
   try {
-    let parsedData = null;
+    let minimalData = null;
     try {
-      parsedData = JSON.parse(decodeURIComponent(dataParam));
+      minimalData = JSON.parse(decodeURIComponent(dataParam));
     } catch (parseError) {
       console.error('URL data parse failed:', parseError.message);
       throw new Error('Invalid trace data format in URL');
     }
 
-    // Validate parsed data has required fields
-    if (!parsedData || typeof parsedData !== 'object') {
-      throw new Error('Trace data is invalid');
+    // Validate minimal data has required fields
+    if (!minimalData || typeof minimalData !== 'object' || !minimalData.productId || !minimalData.destination) {
+      throw new Error('Trace data missing required fields');
     }
 
-    // Render trace directly from URL parameter
-    renderMeta(parsedData);
-    renderSummary(parsedData.journey || [], parsedData);
-    renderRouteVisualization(parsedData.journey || []);
-    renderTimeline(parsedData.journey || []);
-    bindDownloadReport(parsedData, parsedData.journey || []);
+    // Call API to get full trace data
+    const resp = await fetch('/generate-trace', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        productId: minimalData.productId,
+        destination: minimalData.destination
+      })
+    });
+
+    const payload = await parseApiResponse(resp);
+    if (!resp.ok || !payload?.success) {
+      throw new Error(payload?.message || 'Failed to generate trace');
+    }
+
+    // Render full trace from API response
+    const fullTrace = payload.data || payload;
+    renderMeta(fullTrace);
+    renderSummary(fullTrace.journey || [], fullTrace);
+    renderRouteVisualization(fullTrace.journey || []);
+    renderTimeline(fullTrace.journey || []);
+    bindDownloadReport(fullTrace, fullTrace.journey || []);
     hideState();
   } catch (error) {
     setState(error.message || 'Something went wrong while loading trace', 'error');
