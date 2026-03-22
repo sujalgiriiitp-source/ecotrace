@@ -176,11 +176,32 @@ function normalizeJourney(entry) {
     return {
       location: step.location || 'Unknown',
       step: step.step || `Step ${index + 1}`,
+      distance: Number(step.distance) || 0,
+      mode: step.mode || 'truck',
       co2: Number(step.co2) || 0,
       timestamp: step.timestamp || entry.createdAt || new Date().toISOString(),
-      status: normalizedStatus
+      status: normalizedStatus,
+      icon: step.icon || step.step || `Step ${index + 1}`,
+      productId: step.productId || entry.id || ''
     };
   });
+}
+
+function validateAddEntryInput({ companyName, productName, co2Emission }) {
+  if (!companyName || !productName || co2Emission === undefined) {
+    return 'companyName, productName, and co2Emission are required.';
+  }
+
+  if (String(companyName).trim().length < 2 || String(productName).trim().length < 2) {
+    return 'companyName and productName must be at least 2 characters.';
+  }
+
+  const parsedEmission = Number(co2Emission);
+  if (!Number.isFinite(parsedEmission) || parsedEmission < 0) {
+    return 'co2Emission must be a valid non-negative number.';
+  }
+
+  return null;
 }
 
 function normalizeSearchValue(value) {
@@ -232,21 +253,43 @@ function findEntryByProductId(entries, productIdInput) {
   return partialMatch || null;
 }
 
-function buildTraceFromEntry(entry, destination, origin = 'factory') {
+async function buildTraceFromEntry(entry, destination, origin = 'factory') {
   const safeDestination = String(destination || 'destination').trim() || 'destination';
   const safeOrigin = String(origin || 'factory').trim() || 'factory';
   const totalCO2 = Number(entry?.co2Emission) || 0;
 
+  const safeDistance = async (from, to, fallbackDistance) => {
+    try {
+      const distance = await getDistance(from, to);
+      return Number(distance.toFixed(2));
+    } catch (_error) {
+      return Number(fallbackDistance.toFixed(2));
+    }
+  };
+
+  const distanceFactoryToWarehouse = await safeDistance(safeOrigin, 'warehouse', 120);
+  const distanceWarehouseToTransport = await safeDistance('warehouse', 'transport', 180);
+  const distanceTransportToDestination = await safeDistance('transport', safeDestination, 260);
+
   const steps = [
-    { step: 'Factory', location: safeOrigin, distance: 120, share: 0.25, mode: 'truck' },
-    { step: 'Warehouse', location: 'warehouse', distance: 180, share: 0.25, mode: 'truck' },
-    { step: 'Transport', location: 'transport', distance: 260, share: 0.35, mode: 'train' },
-    { step: 'Destination', location: safeDestination, distance: 90, share: 0.15, mode: 'truck' }
+    { step: 'Factory', location: safeOrigin, distance: 0, mode: 'truck' },
+    { step: 'Warehouse', location: 'warehouse', distance: distanceFactoryToWarehouse, mode: 'truck' },
+    { step: 'Transport', location: 'transport', distance: distanceWarehouseToTransport, mode: 'train' },
+    { step: 'Destination', location: safeDestination, distance: distanceTransportToDestination, mode: 'truck' }
   ];
+
+  const modeWeight = { truck: 1, train: 0.6, air: 2.5 };
+  const stepWeights = [
+    120,
+    Math.max(steps[1].distance, 1) * modeWeight[steps[1].mode],
+    Math.max(steps[2].distance, 1) * modeWeight[steps[2].mode],
+    Math.max(steps[3].distance, 1) * modeWeight[steps[3].mode]
+  ];
+  const totalWeight = stepWeights.reduce((sum, value) => sum + value, 0) || 1;
 
   const now = Date.now();
   const journey = steps.map((step, index) => {
-    const co2 = Number((totalCO2 * step.share).toFixed(2));
+    const co2 = Number((totalCO2 * (stepWeights[index] / totalWeight)).toFixed(2));
     return {
       step: step.step,
       location: step.location,
@@ -418,6 +461,18 @@ function getRating(totalCo2) {
   return '❌ High Impact';
 }
 
+function getComparisonInsight(totalCo2, benchmark = 120) {
+  const safeBenchmark = Number(benchmark) > 0 ? Number(benchmark) : 120;
+  const deltaPct = ((Number(totalCo2 || 0) - safeBenchmark) / safeBenchmark) * 100;
+  const absolutePct = Math.abs(deltaPct).toFixed(1);
+
+  if (deltaPct <= 0) {
+    return `This shipment emits ${absolutePct}% less CO2 than average.`;
+  }
+
+  return `This shipment emits ${absolutePct}% more CO2 than average.`;
+}
+
 
 // --- Smart Trace Engine (real distance, modular) ---
 async function buildSmartJourney(productId, origin, destination) {
@@ -562,20 +617,15 @@ async function handleAddEntry(req, res) {
   try {
     const { companyName, productName, co2Emission, journey } = req.body;
 
-    if (!companyName || !productName || co2Emission === undefined) {
+    const validationError = validateAddEntryInput({ companyName, productName, co2Emission });
+    if (validationError) {
       return res.status(400).json({
         success: false,
-        message: 'companyName, productName, and co2Emission are required.'
+        message: validationError
       });
     }
 
     const parsedEmission = Number(co2Emission);
-    if (Number.isNaN(parsedEmission) || parsedEmission < 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'co2Emission must be a valid non-negative number.'
-      });
-    }
 
     const entry = {
       id: generateId(),
@@ -748,6 +798,13 @@ app.post('/generate-trace', async (req, res) => {
     }
 
     const cleanProductId = String(productId).trim();
+    if (cleanProductId.length < 2) {
+      return res.status(400).json({
+        success: false,
+        message: 'productId must be at least 2 characters for reliable matching.'
+      });
+    }
+
     const cleanOrigin = String(origin || 'factory').trim();
     const cleanDestination = String(destination).trim();
     const db = await readDatabase();
@@ -760,12 +817,15 @@ app.post('/generate-trace', async (req, res) => {
       });
     }
 
-    const trace = buildTraceFromEntry(entry, cleanDestination, cleanOrigin);
+    const trace = await buildTraceFromEntry(entry, cleanDestination, cleanOrigin);
 
     entry.journey = trace.journey;
     entry.lastTraceDestination = trace.destination;
     entry.lastTraceGeneratedAt = trace.generatedAt;
     await writeDatabase(db);
+
+    const aiInsight = getAISuggestion(trace.totalCO2);
+    const comparisonInsight = getComparisonInsight(trace.totalCO2);
 
     return res.json({
       success: true,
@@ -773,14 +833,18 @@ app.post('/generate-trace', async (req, res) => {
       totalCO2: trace.totalCO2,
       efficiency: getEfficiencyScore(trace.totalCO2, trace.totalDistance),
       rating: getRating(trace.totalCO2),
-      aiSuggestion: getAISuggestion(trace.totalCO2),
+      aiSuggestion: aiInsight,
+      aiInsight,
+      comparisonInsight,
       anomaly: isHighEmission(trace.totalCO2),
       journey: trace.journey,
       data: {
         ...trace,
         entryId: entry.id,
         companyName: entry.companyName,
-        productName: entry.productName
+        productName: entry.productName,
+        aiInsight,
+        comparisonInsight
       }
     });
   } catch (error) {

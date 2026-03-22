@@ -281,6 +281,60 @@ body {
   border-color: rgba(0, 195, 255, 0.22);
 }
 
+.trace-feedback {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+.trace-loading {
+  border: 1px solid rgba(0, 195, 255, 0.35);
+  background: rgba(0, 195, 255, 0.12);
+  color: var(--accent-cyan);
+}
+
+.trace-error {
+  border: 1px solid rgba(255, 85, 121, 0.35);
+  background: rgba(255, 85, 121, 0.1);
+  color: #ff9db3;
+}
+
+.trace-success {
+  border: 1px solid rgba(0, 255, 159, 0.35);
+  background: rgba(0, 255, 159, 0.1);
+  color: var(--accent);
+}
+
+.last-entry-panel {
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 255, 159, 0.22);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.last-entry-title {
+  margin: 0 0 6px;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.last-entry-value {
+  margin: 0 0 10px;
+  color: var(--accent);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+  font-size: 0.85rem;
+  word-break: break-all;
+}
+
+.last-entry-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 /* Button */
 .btn-primary {
   padding: 15px 30px;

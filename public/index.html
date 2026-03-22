@@ -103,6 +103,21 @@
             </span>
           </button>
         </form>
+
+        <div id="traceSpinner" class="trace-feedback trace-loading" style="display: none;">
+          ⏳ Generating smart route...
+        </div>
+        <div id="traceError" class="trace-feedback trace-error" style="display: none;"></div>
+        <div id="traceResult" class="trace-feedback trace-success" style="display: none;"></div>
+
+        <div class="last-entry-panel">
+          <p class="last-entry-title">Recent Entry ID</p>
+          <p id="lastEntryIdValue" class="last-entry-value">Not available yet</p>
+          <div class="last-entry-actions">
+            <button type="button" id="copyLastEntryIdBtn" class="copy-btn mini-copy">📋 Copy ID</button>
+            <button type="button" id="useLastEntryIdBtn" class="copy-btn mini-copy">↩ Use in Trace</button>
+          </div>
+        </div>
       </section>
 
       <section class="stats-section">

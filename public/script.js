@@ -31,6 +31,11 @@ const smartTraceBtnLoader = document.getElementById('smartTraceBtnLoader');
 const traceSpinner = document.getElementById('traceSpinner');
 const traceError = document.getElementById('traceError');
 const traceResult = document.getElementById('traceResult');
+const lastEntryIdValue = document.getElementById('lastEntryIdValue');
+const copyLastEntryIdBtn = document.getElementById('copyLastEntryIdBtn');
+const useLastEntryIdBtn = document.getElementById('useLastEntryIdBtn');
+
+const LAST_ENTRY_ID_KEY = 'ecotrace:lastEntryId';
 
 let entries = [];
 let chartInstance = null;
@@ -112,6 +117,46 @@ function setSmartTraceUiState(state, message = '') {
     traceResult.style.display = state === 'success' ? 'block' : 'none';
     traceResult.textContent = state === 'success' ? message : '';
   }
+}
+
+function persistLastEntryId(id) {
+  const cleanId = String(id || '').trim();
+  if (!cleanId) {
+    return;
+  }
+
+  localStorage.setItem(LAST_ENTRY_ID_KEY, cleanId);
+  if (lastEntryIdValue) {
+    lastEntryIdValue.textContent = cleanId;
+  }
+  if (smartProductIdInput) {
+    smartProductIdInput.value = cleanId;
+  }
+}
+
+function hydrateLastEntryId() {
+  const saved = localStorage.getItem(LAST_ENTRY_ID_KEY);
+  if (!saved) {
+    return;
+  }
+
+  if (lastEntryIdValue) {
+    lastEntryIdValue.textContent = saved;
+  }
+  if (smartProductIdInput && !smartProductIdInput.value.trim()) {
+    smartProductIdInput.value = saved;
+  }
+}
+
+function copyTextToClipboard(value, successMessage = 'Copied successfully') {
+  if (!value) {
+    showToast('Nothing to copy', 'error');
+    return;
+  }
+
+  navigator.clipboard.writeText(value)
+    .then(() => showToast(successMessage, 'success'))
+    .catch(() => showToast('Failed to copy value', 'error'));
 }
 
 async function fetchSmartTrace(productId, destination, origin = 'factory') {
@@ -690,11 +735,16 @@ async function addEntry(event) {
     renderEntries();
 
     // Show success message
-    const shortId = String(result.data.id || '').slice(0, 12);
+    const createdId = String(result.data.id || '').trim();
+    const shortId = createdId.slice(0, 12);
     const message = result.data.txHash
       ? `✅ Stored on Blockchain! ID: ${shortId}...`
       : `✅ Entry added! ID: ${shortId}...`;
     showToast(message, 'success');
+
+    if (createdId) {
+      persistLastEntryId(createdId);
+    }
 
     // Scroll to new entry
     setTimeout(() => {
@@ -720,6 +770,12 @@ async function generateSmartTrace(event) {
   if (!productId || !destination) {
     showToast('❌ Product ID and destination are required', 'error');
     setSmartTraceUiState('error', 'Product ID and destination are required.');
+    return;
+  }
+
+  if (productId.length < 2) {
+    showToast('❌ Product ID should be at least 2 characters', 'error');
+    setSmartTraceUiState('error', 'Please enter a longer product ID for accurate matching.');
     return;
   }
 
@@ -757,14 +813,27 @@ async function generateSmartTrace(event) {
       efficiency: Number(payload.efficiency) || 0,
       ecoRating: payload.ecoRating || payload.rating || '',
       anomaly: Boolean(payload.anomaly),
-      aiSuggestion: payload.aiSuggestion || '',
-      journey
+      aiSuggestion: payload.aiSuggestion || payload.aiInsight || '',
+      comparisonInsight: payload.comparisonInsight || payloadData.comparisonInsight || '',
+      journey: journey.map((step) => ({
+        ...step,
+        status: step.status || 'Success'
+      }))
     };
+
+    const routeLabel = tracePayload.journey.map((step) => step.step).join(' → ');
+    const insightLine = tracePayload.comparisonInsight || 'Compared with average supply-chain emissions.';
 
     console.log('[FE] smart-trace response', tracePayload);
     showToast('✅ Smart trace generated successfully', 'success');
-    setSmartTraceUiState('success', 'Smart trace generated. Redirecting to journey view...');
-    renderJourney(tracePayload);
+    setSmartTraceUiState(
+      'success',
+      `Route: ${routeLabel} | CO2: ${tracePayload.totalCO2.toFixed(2)} kg | ${tracePayload.aiSuggestion}. ${insightLine}`
+    );
+
+    setTimeout(() => {
+      renderJourney(tracePayload);
+    }, 450);
   } catch (error) {
     showToast(`❌ ${error.message || 'Failed to generate smart trace'}`, 'error');
     setSmartTraceUiState('error', error.message || 'Failed to generate smart trace.');
@@ -826,7 +895,29 @@ if (importBtn && csvInput) {
 }
 
 
-// --- Smart Trace Form: Use new /smart-trace API and show real results ---
+if (copyLastEntryIdBtn) {
+  copyLastEntryIdBtn.addEventListener('click', () => {
+    const idToCopy = (lastEntryIdValue?.textContent || '').trim();
+    copyTextToClipboard(idToCopy, 'Entry ID copied');
+  });
+}
+
+if (useLastEntryIdBtn) {
+  useLastEntryIdBtn.addEventListener('click', () => {
+    const lastId = (lastEntryIdValue?.textContent || '').trim();
+    if (!lastId) {
+      showToast('No recent ID available yet', 'error');
+      return;
+    }
+    if (smartProductIdInput) {
+      smartProductIdInput.value = lastId;
+      smartProductIdInput.focus();
+    }
+    showToast('Last ID applied to trace input', 'success');
+  });
+}
+
+// --- Smart Trace Form: Use /generate-trace API and show real results ---
 if (smartTraceForm) {
   smartTraceForm.addEventListener('submit', generateSmartTrace);
 }
@@ -899,6 +990,7 @@ function goToVerify(id) {
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
+  hydrateLastEntryId();
   loadEntries();
 });
 
