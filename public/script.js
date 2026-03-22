@@ -22,6 +22,12 @@ const maxEmissionInput = document.getElementById('maxEmission');
 const startDateInput = document.getElementById('startDate');
 const endDateInput = document.getElementById('endDate');
 const anomalyOnly = document.getElementById('anomalyOnly');
+const smartTraceForm = document.getElementById('smartTraceForm');
+const smartProductIdInput = document.getElementById('smartProductId');
+const smartDestinationInput = document.getElementById('smartDestination');
+const smartTraceButton = document.getElementById('smartTraceButton');
+const smartTraceBtnText = document.getElementById('smartTraceBtnText');
+const smartTraceBtnLoader = document.getElementById('smartTraceBtnLoader');
 
 let entries = [];
 let chartInstance = null;
@@ -643,6 +649,60 @@ async function addEntry(event) {
   }
 }
 
+async function generateSmartTrace(event) {
+  event.preventDefault();
+
+  const productId = smartProductIdInput?.value?.trim();
+  const destination = smartDestinationInput?.value?.trim();
+
+  if (!productId || !destination) {
+    showToast('❌ Product ID and destination are required', 'error');
+    return;
+  }
+
+  if (smartTraceButton && smartTraceBtnText && smartTraceBtnLoader) {
+    smartTraceButton.disabled = true;
+    smartTraceBtnText.style.display = 'none';
+    smartTraceBtnLoader.style.display = 'flex';
+  }
+
+  try {
+    const response = await fetch('/generate-trace', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ productId, destination })
+    });
+
+    const payload = await response.json();
+    if (!response.ok || !payload?.success) {
+      throw new Error(payload?.message || 'Unable to generate smart trace');
+    }
+
+    const tracePayload = {
+      productId,
+      destination,
+      totalCO2: Number(payload.totalCO2) || Number(payload?.data?.totalCO2) || 0,
+      efficiency: Number(payload.efficiency) || Number(payload?.data?.efficiency) || 0,
+      rating: payload.rating || payload?.data?.rating || '',
+      journey: Array.isArray(payload.journey)
+        ? payload.journey
+        : (Array.isArray(payload?.data?.journey) ? payload.data.journey : [])
+    };
+
+    const encoded = encodeURIComponent(JSON.stringify(tracePayload));
+    window.location.href = `/trace.html?data=${encoded}`;
+  } catch (error) {
+    showToast(`❌ ${error.message || 'Failed to generate smart trace'}`, 'error');
+    console.error('Smart trace error:', error);
+  } finally {
+    if (smartTraceButton && smartTraceBtnText && smartTraceBtnLoader) {
+      smartTraceButton.disabled = false;
+      smartTraceBtnText.style.display = 'inline';
+      smartTraceBtnLoader.style.display = 'none';
+    }
+  }
+}
+
 // ===== EVENT LISTENERS =====
 form.addEventListener('submit', addEntry);
 
@@ -688,6 +748,10 @@ if (importBtn && csvInput) {
     await importCsvRecords(file);
     csvInput.value = '';
   });
+}
+
+if (smartTraceForm) {
+  smartTraceForm.addEventListener('submit', generateSmartTrace);
 }
 
 entriesContainer.addEventListener('click', (event) => {

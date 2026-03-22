@@ -82,6 +82,29 @@
         <div id="toastContainer" class="toast-container"></div>
       </section>
 
+      <section class="card smart-trace-card">
+        <h2>🧠 Generate Smart Trace</h2>
+        <p class="smart-trace-subtitle">Auto-calculate supply chain journey and carbon footprint.</p>
+        <form id="smartTraceForm" class="entry-form smart-trace-form">
+          <div class="form-group floating-field">
+            <input id="smartProductId" name="smartProductId" type="text" placeholder=" " required />
+            <label for="smartProductId">Product ID</label>
+          </div>
+
+          <div class="form-group floating-field">
+            <input id="smartDestination" name="smartDestination" type="text" placeholder=" " required />
+            <label for="smartDestination">Destination (City / State)</label>
+          </div>
+
+          <button type="submit" id="smartTraceButton" class="btn-primary">
+            <span id="smartTraceBtnText">Generate Journey</span>
+            <span id="smartTraceBtnLoader" class="btn-loader" style="display: none;">
+              <span class="spinner-inline"></span>
+            </span>
+          </button>
+        </form>
+      </section>
+
       <section class="stats-section">
         <div class="stat-box stats-card">
           <div class="stat-icon">📊</div>

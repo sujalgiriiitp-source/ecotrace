@@ -158,6 +158,74 @@ function normalizeJourney(entry) {
   });
 }
 
+const STEP_FACTORS = {
+  Factory: 0.08,
+  Warehouse: 0.05,
+  Transport: 0.12,
+  Destination: 0.03
+};
+
+const ROUTE_STEPS = [
+  { step: 'Factory', percent: 0.2, location: 'Factory' },
+  { step: 'Warehouse', percent: 0.3, location: 'Warehouse Hub' },
+  { step: 'Transport', percent: 0.3, location: 'Transport Corridor' },
+  { step: 'Destination', percent: 0.2, location: null }
+];
+
+function getDistance(city) {
+  const text = String(city || '').trim();
+  let base = 500;
+  let hash = 0;
+
+  for (let index = 0; index < text.length; index += 1) {
+    hash += text.charCodeAt(index);
+  }
+
+  return base + (hash % 2000);
+}
+
+function getRating(totalCo2) {
+  if (totalCo2 < 100) return '🌱 Eco Friendly';
+  if (totalCo2 < 400) return '⚠ Moderate';
+  return '❌ High Impact';
+}
+
+function buildSmartJourney(productId, destination) {
+  const totalDistance = getDistance(destination);
+  const now = Date.now();
+
+  const journey = ROUTE_STEPS.map((entry, index) => {
+    const stepDistance = Number((totalDistance * entry.percent).toFixed(2));
+    const factor = STEP_FACTORS[entry.step] || 0.05;
+    const stepCo2 = Number((stepDistance * factor).toFixed(2));
+
+    return {
+      location: entry.step === 'Destination' ? destination : entry.location,
+      step: entry.step,
+      distance: stepDistance,
+      co2: stepCo2,
+      timestamp: new Date(now + index * 2 * 60 * 60 * 1000).toISOString(),
+      status: 'Success',
+      icon: entry.step,
+      productId
+    };
+  });
+
+  const totalCO2 = Number(journey.reduce((sum, item) => sum + item.co2, 0).toFixed(2));
+  const efficiency = Number((1000 / Math.max(totalCO2, 1)).toFixed(2));
+  const rating = getRating(totalCO2);
+
+  return {
+    productId,
+    destination,
+    totalDistance,
+    totalCO2,
+    efficiency,
+    rating,
+    journey
+  };
+}
+
 app.post('/add', async (req, res) => {
   try {
     const { companyName, productName, co2Emission, journey } = req.body;
@@ -279,6 +347,38 @@ app.get('/entries/:id', async (req, res) => {
     return res.status(500).json({
       success: false,
       message: 'Failed to fetch entry.'
+    });
+  }
+});
+
+app.post('/generate-trace', (req, res) => {
+  try {
+    const { productId, destination } = req.body || {};
+
+    if (!productId || !destination) {
+      return res.status(400).json({
+        success: false,
+        message: 'productId and destination are required.'
+      });
+    }
+
+    const cleanProductId = String(productId).trim();
+    const cleanDestination = String(destination).trim();
+    const trace = buildSmartJourney(cleanProductId, cleanDestination);
+
+    return res.json({
+      success: true,
+      totalCO2: trace.totalCO2,
+      efficiency: trace.efficiency,
+      rating: trace.rating,
+      journey: trace.journey,
+      data: trace
+    });
+  } catch (error) {
+    console.error('POST /generate-trace error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to generate smart trace.'
     });
   }
 });

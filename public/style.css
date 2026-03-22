@@ -218,8 +218,29 @@ body {
   outline: none;
 }
 
+.floating-field select {
+  width: 100%;
+  padding: 15px 15px 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(0, 255, 159, 0.3);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  outline: none;
+  appearance: none;
+}
+
 .floating-field input:focus,
 .floating-field input:valid {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--accent);
+  box-shadow: 0 0 15px rgba(0, 255, 159, 0.2);
+}
+
+.floating-field select:focus,
+.floating-field select:valid {
   background: rgba(255, 255, 255, 0.05);
   border-color: var(--accent);
   box-shadow: 0 0 15px rgba(0, 255, 159, 0.2);
@@ -240,6 +261,24 @@ body {
   top: -20px;
   font-size: 0.8rem;
   color: var(--accent);
+}
+
+.floating-field select:focus ~ label,
+.floating-field select:valid ~ label {
+  top: -20px;
+  font-size: 0.8rem;
+  color: var(--accent);
+}
+
+.smart-trace-subtitle {
+  margin-top: -8px;
+  margin-bottom: 18px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.smart-trace-card {
+  border-color: rgba(0, 195, 255, 0.22);
 }
 
 /* Button */

@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="style.css" />
     <style>
       .trace-wrap {
-        max-width: 900px;
+        max-width: 1080px;
         margin: 36px auto;
       }
 
@@ -31,11 +31,164 @@
         letter-spacing: 0.3px;
       }
 
+      .trace-header-actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .trace-header .copy-btn {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .trace-header .copy-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 0 16px rgba(0, 255, 159, 0.22);
+      }
+
       .trace-meta {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
         gap: 10px;
         margin: 12px 0 18px;
+      }
+
+      .trace-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 10px;
+        margin: 8px 0 18px;
+      }
+
+      .trace-kpi {
+        border: 1px solid rgba(0, 255, 159, 0.2);
+        border-radius: 12px;
+        padding: 12px;
+        background: linear-gradient(145deg, rgba(0, 255, 159, 0.08), rgba(0, 195, 255, 0.03));
+      }
+
+      .trace-kpi span {
+        color: var(--muted);
+        display: block;
+        font-size: 0.84rem;
+      }
+
+      .trace-kpi strong {
+        display: block;
+        margin-top: 4px;
+        font-size: 1.08rem;
+      }
+
+      .trace-kpi:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 22px rgba(0, 255, 159, 0.15);
+      }
+
+      .trace-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 14px;
+        margin-bottom: 16px;
+      }
+
+      .trace-panel {
+        border: 1px solid rgba(255, 255, 255, 0.11);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.04);
+        padding: 14px;
+        animation: traceFadeIn 0.35s ease both;
+      }
+
+      .trace-panel h3 {
+        margin: 0 0 10px;
+        color: var(--accent);
+        font-size: 1rem;
+      }
+
+      .trace-insight,
+      .trace-comparison {
+        color: var(--text);
+        line-height: 1.6;
+        font-size: 0.95rem;
+      }
+
+      .trace-map {
+        overflow-x: auto;
+        padding-bottom: 6px;
+      }
+
+      .trace-map-track {
+        min-width: 620px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 6px;
+      }
+
+      .trace-map-node {
+        min-width: 128px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .trace-map-dot {
+        width: 16px;
+        height: 16px;
+        border-radius: 999px;
+        background: #00ff88;
+        box-shadow: 0 0 14px rgba(0, 255, 136, 0.45);
+      }
+
+      .trace-map-label {
+        text-align: center;
+        font-size: 0.82rem;
+        color: var(--text);
+        max-width: 120px;
+      }
+
+      .trace-map-line {
+        flex: 1;
+        min-width: 54px;
+        height: 2px;
+        background: linear-gradient(90deg, rgba(0, 255, 159, 0.35), rgba(0, 195, 255, 0.8), rgba(0, 255, 159, 0.35));
+        position: relative;
+        overflow: hidden;
+        border-radius: 999px;
+      }
+
+      .trace-map-line::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.95), transparent);
+        animation: lineFlow 1.8s linear infinite;
+      }
+
+      .trace-loading,
+      .trace-empty,
+      .trace-error {
+        padding: 12px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .trace-loading {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .trace-loading::before {
+        content: '';
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        border: 2px solid rgba(0, 255, 159, 0.25);
+        border-top-color: #00ff9f;
+        animation: spin 0.8s linear infinite;
       }
 
       .trace-meta-item {
@@ -117,6 +270,31 @@
         border-radius: 12px;
         padding: 12px 14px;
         background: rgba(255, 255, 255, 0.03);
+        transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .trace-step-card:hover {
+        transform: translateY(-2px);
+        border-color: rgba(0, 255, 159, 0.35);
+        box-shadow: 0 0 22px rgba(0, 255, 159, 0.12);
+      }
+
+      .trace-step-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+
+      .trace-step-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 255, 159, 0.13);
+        border: 1px solid rgba(0, 255, 159, 0.4);
       }
 
       .trace-step-row {
@@ -159,6 +337,20 @@
         border-color: rgba(255, 77, 79, 0.35);
       }
 
+      .trace-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 8px;
+      }
+
+      .trace-actions .copy-btn {
+        border: 1px solid rgba(0, 255, 159, 0.28);
+      }
+
+      .trace-empty-map {
+        color: var(--muted);
+      }
+
       @keyframes traceFadeIn {
         from {
           opacity: 0;
@@ -169,6 +361,24 @@
           transform: translateY(0);
         }
       }
+
+      @keyframes lineFlow {
+        0% {
+          transform: translateX(-100%);
+        }
+        100% {
+          transform: translateX(100%);
+        }
+      }
+
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
     </style>
   </head>
   <body>
@@ -176,12 +386,36 @@
       <section class="card">
         <div class="trace-header">
           <h1 class="trace-title">Trace Journey</h1>
-          <a href="index.html" class="copy-btn" style="text-decoration:none;">← Back to Dashboard</a>
+          <div class="trace-header-actions">
+            <button id="downloadReportBtn" type="button" class="copy-btn">⬇ Download Report</button>
+            <a href="index.html" class="copy-btn" style="text-decoration:none;">← Back to Dashboard</a>
+          </div>
         </div>
 
         <div id="traceMeta" class="trace-meta"></div>
-        <div id="traceState" class="trace-loading">Loading trace journey...</div>
+        <div id="traceSummary" class="trace-summary"></div>
+
+        <div class="trace-grid">
+          <div class="trace-panel">
+            <h3>🗺️ Route Visualization</h3>
+            <div id="routeVisualization" class="trace-map"></div>
+          </div>
+
+          <div class="trace-panel">
+            <h3>🤖 AI Suggestion</h3>
+            <div id="aiSuggestion" class="trace-insight"></div>
+          </div>
+
+          <div class="trace-panel">
+            <h3>📊 Comparison Insight</h3>
+            <div id="comparisonInsight" class="trace-comparison"></div>
+          </div>
+        </div>
+
+        <div id="traceState" class="trace-loading">Calculating smart trace...</div>
         <div id="timeline" class="trace-timeline" aria-live="polite"></div>
+
+        <div class="trace-actions"></div>
       </section>
     </main>
 
