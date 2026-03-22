@@ -28,6 +28,9 @@ const smartDestinationInput = document.getElementById('smartDestination');
 const smartTraceButton = document.getElementById('smartTraceButton');
 const smartTraceBtnText = document.getElementById('smartTraceBtnText');
 const smartTraceBtnLoader = document.getElementById('smartTraceBtnLoader');
+const traceSpinner = document.getElementById('traceSpinner');
+const traceError = document.getElementById('traceError');
+const traceResult = document.getElementById('traceResult');
 
 let entries = [];
 let chartInstance = null;
@@ -52,6 +55,75 @@ function showToast(message, type = 'success') {
     toast.style.transform = 'translateX(400px)';
     setTimeout(() => toast.remove(), 300);
   }, 3700);
+}
+
+async function parseApiResponse(response) {
+  const contentType = response.headers.get('content-type') || '';
+  const rawText = await response.text();
+
+  if (!contentType.includes('application/json')) {
+    if (rawText.trim().startsWith('<!DOCTYPE') || rawText.trim().startsWith('<html')) {
+      throw new Error('Server returned HTML instead of JSON. Please check API route/deployment config.');
+    }
+    throw new Error('Invalid server response format.');
+  }
+
+  try {
+    return JSON.parse(rawText);
+  } catch (_error) {
+    throw new Error('Failed to parse JSON response from server.');
+  }
+}
+
+async function postJson(url, body) {
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+
+  const payload = await parseApiResponse(response);
+  return { response, payload };
+}
+
+function calculateCO2(distance, mode = 'truck') {
+  const factors = { truck: 0.12, train: 0.04, air: 0.5 };
+  return Number((Number(distance || 0) * (factors[mode] || 0.12)).toFixed(2));
+}
+
+function renderJourney(tracePayload) {
+  const payload = {
+    ...tracePayload,
+    journey: Array.isArray(tracePayload?.journey) ? tracePayload.journey : []
+  };
+  const encoded = encodeURIComponent(JSON.stringify(payload));
+  window.location.href = `/trace.html?data=${encoded}`;
+}
+
+function setSmartTraceUiState(state, message = '') {
+  if (traceSpinner) {
+    traceSpinner.style.display = state === 'loading' ? 'block' : 'none';
+  }
+  if (traceError) {
+    traceError.style.display = state === 'error' ? 'block' : 'none';
+    traceError.textContent = state === 'error' ? message : '';
+  }
+  if (traceResult) {
+    traceResult.style.display = state === 'success' ? 'block' : 'none';
+    traceResult.textContent = state === 'success' ? message : '';
+  }
+}
+
+async function fetchSmartTrace(productId, destination, origin = 'factory') {
+  console.log('[FE] smart-trace request', { productId, destination, origin });
+
+  const { response, payload } = await postJson('/smart-trace', { productId, destination, origin });
+
+  if (!response.ok || !payload?.success) {
+    throw new Error(payload?.message || 'Unable to generate smart trace.');
+  }
+
+  return payload;
 }
 
 // ===== CALCULATIONS =====
@@ -495,7 +567,7 @@ async function loadEntries() {
 
   try {
     const response = await fetch('/entries');
-    const result = await response.json();
+    const result = await parseApiResponse(response);
 
     if (!response.ok || !result.success) {
       throw new Error('Failed to load entries');
@@ -556,12 +628,7 @@ async function importCsvRecords(file) {
   let successCount = 0;
   for (const record of records) {
     try {
-      const response = await fetch('/add', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(record)
-      });
-      const result = await response.json();
+      const { response, payload: result } = await postJson('/add-entry', record);
       if (response.ok && result.success) {
         successCount += 1;
       }
@@ -593,17 +660,11 @@ async function addEntry(event) {
   btnLoader.style.display = 'flex';
 
   try {
-    const response = await fetch('/add', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        companyName,
-        productName,
-        co2Emission
-      })
+    const { response, payload: result } = await postJson('/add-entry', {
+      companyName,
+      productName,
+      co2Emission
     });
-
-    const result = await response.json();
 
     if (!response.ok || !result.success) {
       throw new Error(result.message || 'Failed to add entry');
@@ -657,6 +718,7 @@ async function generateSmartTrace(event) {
 
   if (!productId || !destination) {
     showToast('❌ Product ID and destination are required', 'error');
+    setSmartTraceUiState('error', 'Product ID and destination are required.');
     return;
   }
 
@@ -665,34 +727,39 @@ async function generateSmartTrace(event) {
     smartTraceBtnText.style.display = 'none';
     smartTraceBtnLoader.style.display = 'flex';
   }
+  setSmartTraceUiState('loading');
 
   try {
-    const response = await fetch('/generate-trace', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ productId, destination })
-    });
+    const payload = await fetchSmartTrace(productId, destination, 'factory');
+    const journey = Array.isArray(payload.journey) ? payload.journey : [];
 
-    const payload = await response.json();
-    if (!response.ok || !payload?.success) {
-      throw new Error(payload?.message || 'Unable to generate smart trace');
-    }
+    const totalDistance = Number(payload.totalDistance) || Number(payload?.data?.totalDistance) || 0;
+    const totalCO2 = Number(payload.totalCO2) || Number(payload?.data?.totalCO2) || 0;
+    const recalculatedCO2 = Number(journey.reduce((sum, step) => {
+      const mode = step.mode || 'truck';
+      return sum + calculateCO2(step.distance, mode);
+    }, 0).toFixed(2));
 
     const tracePayload = {
       productId,
+      origin: payload.origin || 'factory',
       destination,
-      totalCO2: Number(payload.totalCO2) || Number(payload?.data?.totalCO2) || 0,
-      efficiency: Number(payload.efficiency) || Number(payload?.data?.efficiency) || 0,
-      rating: payload.rating || payload?.data?.rating || '',
-      journey: Array.isArray(payload.journey)
-        ? payload.journey
-        : (Array.isArray(payload?.data?.journey) ? payload.data.journey : [])
+      totalDistance,
+      totalCO2: totalCO2 || recalculatedCO2,
+      efficiency: Number(payload.efficiency) || 0,
+      ecoRating: payload.ecoRating || payload.rating || '',
+      anomaly: Boolean(payload.anomaly),
+      aiSuggestion: payload.aiSuggestion || '',
+      journey
     };
 
-    const encoded = encodeURIComponent(JSON.stringify(tracePayload));
-    window.location.href = `/trace.html?data=${encoded}`;
+    console.log('[FE] smart-trace response', tracePayload);
+    showToast('✅ Smart trace generated successfully', 'success');
+    setSmartTraceUiState('success', 'Smart trace generated. Redirecting to journey view...');
+    renderJourney(tracePayload);
   } catch (error) {
     showToast(`❌ ${error.message || 'Failed to generate smart trace'}`, 'error');
+    setSmartTraceUiState('error', error.message || 'Failed to generate smart trace.');
     console.error('Smart trace error:', error);
   } finally {
     if (smartTraceButton && smartTraceBtnText && smartTraceBtnLoader) {
@@ -750,6 +817,8 @@ if (importBtn && csvInput) {
   });
 }
 
+
+// --- Smart Trace Form: Use new /smart-trace API and show real results ---
 if (smartTraceForm) {
   smartTraceForm.addEventListener('submit', generateSmartTrace);
 }

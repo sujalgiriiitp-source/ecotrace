@@ -10,6 +10,24 @@ function generateHash(data) {
   ).toString();
 }
 
+async function parseApiResponse(response) {
+  const contentType = response.headers.get('content-type') || '';
+  const rawText = await response.text();
+
+  if (!contentType.includes('application/json')) {
+    if (rawText.trim().startsWith('<!DOCTYPE') || rawText.trim().startsWith('<html')) {
+      throw new Error('Server returned HTML instead of JSON. Please verify API route configuration.');
+    }
+    throw new Error('Invalid response format from server.');
+  }
+
+  try {
+    return JSON.parse(rawText);
+  } catch (_error) {
+    throw new Error('Unable to parse JSON response.');
+  }
+}
+
 // ===== COPY TO CLIPBOARD =====
 function copyToClipboard(text, button) {
   navigator.clipboard.writeText(text).then(() => {
@@ -88,10 +106,16 @@ async function loadVerification() {
   }
 
   try {
-    const response = await fetch('/entries');
-    const result = await response.json();
-    const data = Array.isArray(result?.data) ? result.data : [];
-    const item = data.find(d => d.id === id);
+    const response = await fetch('/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+    const result = await parseApiResponse(response);
+    const item = result?.data?.entry || null;
+
+    console.log('[FE_VERIFY] Requested ID:', id);
+    console.log('[FE_VERIFY] Verification status:', result?.data?.verificationStatus);
 
     const statusElement = document.getElementById('status') || document.getElementById('vStatus');
 
@@ -111,16 +135,16 @@ async function loadVerification() {
       timestamp: item.timestamp || item.createdAt || ''
     };
 
-    const newHash = generateHash(verificationData);
+    const newHash = result?.data?.recomputedHash || generateHash(verificationData);
 
     console.log('Stored:', item.hash);
     console.log('New:', newHash);
 
     if (statusElement) {
-      if (newHash === item.hash) {
-        statusElement.innerText = 'Verified ✅';
+      if (result?.data?.verified || newHash === item.hash) {
+        statusElement.innerText = 'Data Integrity Maintained ✅';
       } else {
-        statusElement.innerText = 'Tampered ❌';
+        statusElement.innerText = 'Data Modified After Storage ❌';
       }
     }
 

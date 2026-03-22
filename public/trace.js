@@ -55,6 +55,56 @@ function safeText(value) {
     .replace(/'/g, '&#39;');
 }
 
+async function parseApiResponse(response) {
+  const contentType = response.headers.get('content-type') || '';
+  const rawText = await response.text();
+
+  if (!contentType.includes('application/json')) {
+    if (rawText.trim().startsWith('<!DOCTYPE') || rawText.trim().startsWith('<html')) {
+      throw new Error('Server returned HTML instead of JSON.');
+    }
+    throw new Error('Invalid response format from server.');
+  }
+
+  try {
+    return JSON.parse(rawText);
+  } catch (_error) {
+    throw new Error('Unable to parse JSON response.');
+  }
+}
+
+function buildMockTrace({ productId, destination, origin }) {
+  const now = Date.now();
+  const journey = [
+    { step: 'Factory', location: origin || 'factory', distance: 0, co2: 0, status: 'Success' },
+    { step: 'Warehouse', location: 'warehouse', distance: 24, co2: 2.88, status: 'Success' },
+    { step: 'Transport', location: 'transport', distance: 42, co2: 1.68, status: 'Success' },
+    { step: 'Destination', location: destination || 'unknown', distance: 120, co2: 14.4, status: 'Success' }
+  ].map((step, index) => ({
+    ...step,
+    icon: step.step,
+    productId,
+    timestamp: new Date(now + index * 2 * 60 * 60 * 1000).toISOString()
+  }));
+
+  const totalDistance = Number(journey.reduce((sum, step) => sum + (Number(step.distance) || 0), 0).toFixed(2));
+  const totalCO2 = Number(journey.reduce((sum, step) => sum + (Number(step.co2) || 0), 0).toFixed(2));
+
+  return {
+    productId,
+    destination,
+    origin,
+    totalDistance,
+    totalCO2,
+    efficiency: Number((1000 / Math.max(totalCO2, 1)).toFixed(2)),
+    ecoRating: totalCO2 < 50 ? 'Eco Friendly' : totalCO2 <= 150 ? 'Moderate' : 'High Impact',
+    anomaly: totalCO2 > 150,
+    aiSuggestion: totalCO2 > 150 ? 'High emission detected. Consider route or mode optimization.' : 'Good route profile.',
+    journey,
+    fallback: true
+  };
+}
+
 function calcMetrics(journey, sourceMeta = {}) {
   const list = Array.isArray(journey) ? journey : [];
   const totalDistance = Number(
@@ -262,19 +312,22 @@ function parseDataFromUrl() {
 
 async function loadStoredTrace(id) {
   const response = await fetch(`/entries/${encodeURIComponent(id)}`);
-  const payload = await response.json();
+  const payload = await parseApiResponse(response);
   if (!response.ok || !payload?.success) {
     throw new Error(payload?.message || 'Record not found');
   }
   return payload.data;
 }
 
+
+// --- Smart trace loader: supports /smart-trace API for real calculation ---
 async function loadTraceJourney() {
   const params = new URLSearchParams(window.location.search);
   const id = params.get('id');
   const dataPayload = parseDataFromUrl();
+  const smartTrace = params.get('smart') === '1';
 
-  if (!id && !dataPayload) {
+  if (!id && !dataPayload && !smartTrace) {
     setState('Record not found', 'error');
     return;
   }
@@ -282,12 +335,50 @@ async function loadTraceJourney() {
   setState(dataPayload ? 'Calculating smart trace...' : 'Loading trace journey...', 'loading');
 
   try {
+    // If ?smart=1&origin=...&destination=...&productId=... is present, call /smart-trace
+    if (smartTrace) {
+      const origin = params.get('origin');
+      const destination = params.get('destination');
+      const productId = params.get('productId');
+      if (!origin || !destination || !productId) {
+        setState('Missing smart trace parameters', 'error');
+        return;
+      }
+      // Show spinner
+      setState('Calculating real route and CO₂...', 'loading');
+      const resp = await fetch('/smart-trace', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ origin, destination, productId })
+      });
+      const payload = await parseApiResponse(resp);
+      if (!resp.ok || !payload.success) {
+        const fallbackTrace = buildMockTrace({ productId, destination, origin });
+        renderMeta(fallbackTrace);
+        renderSummary(fallbackTrace.journey || [], fallbackTrace);
+        renderRouteVisualization(fallbackTrace.journey || []);
+        renderTimeline(fallbackTrace.journey || []);
+        bindDownloadReport(fallbackTrace, fallbackTrace.journey || []);
+        setState('Showing fallback trace data due to API issue.', 'empty');
+        return;
+      }
+      // Render real smart trace
+      renderMeta(payload);
+      renderSummary(payload.journey || [], payload);
+      renderRouteVisualization(payload.journey || []);
+      renderTimeline(payload.journey || []);
+      bindDownloadReport(payload, payload.journey || []);
+      hideState();
+      return;
+    }
+
     if (dataPayload) {
       renderMeta(dataPayload);
       renderSummary(dataPayload.journey || [], dataPayload);
       renderRouteVisualization(dataPayload.journey || []);
       renderTimeline(dataPayload.journey || []);
       bindDownloadReport(dataPayload, dataPayload.journey || []);
+      hideState();
       return;
     }
 
@@ -297,7 +388,24 @@ async function loadTraceJourney() {
     renderRouteVisualization(item.journey || []);
     renderTimeline(item.journey || []);
     bindDownloadReport(item, item.journey || []);
+    hideState();
   } catch (error) {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('smart') === '1') {
+      const fallbackTrace = buildMockTrace({
+        productId: params.get('productId') || 'N/A',
+        destination: params.get('destination') || 'unknown',
+        origin: params.get('origin') || 'factory'
+      });
+      renderMeta(fallbackTrace);
+      renderSummary(fallbackTrace.journey || [], fallbackTrace);
+      renderRouteVisualization(fallbackTrace.journey || []);
+      renderTimeline(fallbackTrace.journey || []);
+      bindDownloadReport(fallbackTrace, fallbackTrace.journey || []);
+      setState('API unavailable. Showing fallback trace data.', 'empty');
+      return;
+    }
+
     setState(error.message || 'Something went wrong while loading trace', 'error');
   }
 }

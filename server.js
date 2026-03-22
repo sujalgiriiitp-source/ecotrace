@@ -5,12 +5,40 @@ const fs = require('fs').promises;
 const crypto = require('crypto');
 const Web3 = require('web3');
 
+
+const axios = require('axios');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const DB_PATH = path.join(__dirname, 'database.json');
 
+// --- City coordinates mapping ---
+const cities = {
+  delhi: { lat: 28.6139, lng: 77.2090 },
+  mumbai: { lat: 19.0760, lng: 72.8777 },
+  bangalore: { lat: 12.9716, lng: 77.5946 },
+  kolkata: { lat: 22.5726, lng: 88.3639 },
+  jaunpur: { lat: 25.7463, lng: 82.6833 },
+  factory: { lat: 28.7041, lng: 77.1025 }, // Example: Delhi outskirts
+  warehouse: { lat: 28.5355, lng: 77.3910 }, // Example: Noida warehouse
+  transport: { lat: 28.4595, lng: 77.0266 } // Example: Gurugram transport hub
+};
+
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+
+app.use((req, res, next) => {
+  console.log(`[REQ] ${req.method} ${req.originalUrl}`);
+  if (req.method !== 'GET' && req.body && Object.keys(req.body).length > 0) {
+    console.log('[REQ_BODY]', req.body);
+  }
+
+  const originalJson = res.json.bind(res);
+  res.json = (payload) => {
+    console.log(`[RES] ${req.method} ${req.originalUrl} -> ${res.statusCode}`);
+    return originalJson(payload);
+  };
+
+  next();
+});
 
 let web3Instance = null;
 let contractInstance = null;
@@ -172,16 +200,109 @@ const ROUTE_STEPS = [
   { step: 'Destination', percent: 0.2, location: null }
 ];
 
-function getDistance(city) {
-  const text = String(city || '').trim();
-  let base = 500;
-  let hash = 0;
+const FALLBACK_CITY_DISTANCE_KM = {
+  'factory-warehouse': 24,
+  'warehouse-transport': 42,
+  'transport-delhi': 36,
+  'transport-mumbai': 1415,
+  'transport-bangalore': 2110,
+  'transport-kolkata': 1510,
+  'transport-jaunpur': 760,
+  'warehouse-delhi': 30,
+  'warehouse-mumbai': 1420,
+  'warehouse-bangalore': 2098,
+  'warehouse-kolkata': 1498,
+  'warehouse-jaunpur': 748
+};
 
-  for (let index = 0; index < text.length; index += 1) {
-    hash += text.charCodeAt(index);
+
+// --- Real distance using OpenRouteService API ---
+async function getDistance(origin, destination) {
+  const apiKey = process.env.ORS_API_KEY;
+  const from = String(origin || '').trim().toLowerCase();
+  const to = String(destination || '').trim().toLowerCase();
+  const directKey = `${from}-${to}`;
+  const reverseKey = `${to}-${from}`;
+
+  const fallbackDistance = FALLBACK_CITY_DISTANCE_KM[directKey] || FALLBACK_CITY_DISTANCE_KM[reverseKey] || null;
+
+  if (!apiKey) {
+    if (fallbackDistance) return fallbackDistance;
+    throw new Error('ORS_API_KEY not set');
   }
 
-  return base + (hash % 2000);
+  // Accepts city name or {lat, lng} object
+  function toCoords(place) {
+    if (typeof place === 'string' && cities[place.toLowerCase()]) {
+      const c = cities[place.toLowerCase()];
+      return [c.lng, c.lat];
+    }
+    if (typeof place === 'object' && place.lat && place.lng) {
+      return [place.lng, place.lat];
+    }
+    throw new Error('Unknown city or coordinates: ' + JSON.stringify(place));
+  }
+
+  let start, end;
+  try {
+    start = toCoords(origin);
+    end = toCoords(destination);
+  } catch (e) {
+    throw new Error('Invalid origin/destination: ' + e.message);
+  }
+
+  const url = 'https://api.openrouteservice.org/v2/directions/driving-car';
+  try {
+    const resp = await axios.post(url, {
+      coordinates: [start, end]
+    }, {
+      headers: {
+        'Authorization': apiKey,
+        'Content-Type': 'application/json'
+      }
+    });
+    const meters = resp.data.routes[0].summary.distance;
+    return meters / 1000; // km
+  } catch (err) {
+    if (fallbackDistance) {
+      return fallbackDistance;
+    }
+    throw new Error('OpenRouteService API error: ' + (err.response?.data?.error || err.message));
+  }
+}
+
+// --- CO2 calculation ---
+function calculateCO2(distance, type = 'truck') {
+  const factors = {
+    truck: 0.12, // kg/km
+    train: 0.04,
+    air: 0.5
+  };
+  return Number((distance * (factors[type] || 0.12)).toFixed(2));
+}
+
+// --- AI suggestion ---
+function getAISuggestion(co2) {
+  if (co2 < 50) return 'Eco Friendly 🌱';
+  if (co2 < 150) return 'Moderate Emission ⚖️';
+  return 'High Emission ⚠️ Optimize logistics';
+}
+
+function getEcoRating(totalCo2) {
+  if (totalCo2 < 50) return 'Eco Friendly';
+  if (totalCo2 <= 150) return 'Moderate';
+  return 'High Impact';
+}
+
+function getEfficiencyScore(totalCo2, totalDistance) {
+  if (!totalDistance || totalDistance <= 0) return 100;
+  const intensity = totalCo2 / totalDistance;
+  const score = 100 - (intensity * 100);
+  return Number(Math.max(0, Math.min(100, score)).toFixed(2));
+}
+
+function isHighEmission(totalCo2) {
+  return totalCo2 > 150;
 }
 
 function getRating(totalCo2) {
@@ -190,43 +311,147 @@ function getRating(totalCo2) {
   return '❌ High Impact';
 }
 
-function buildSmartJourney(productId, destination) {
-  const totalDistance = getDistance(destination);
+
+// --- Smart Trace Engine (real distance, modular) ---
+async function buildSmartJourney(productId, origin, destination) {
+  // Steps: Factory → Warehouse → Transport → Destination
+  const normalizedOrigin = String(origin || 'factory').trim().toLowerCase();
+  const normalizedDestination = String(destination || '').trim().toLowerCase();
+
+  const steps = [
+    { step: 'Factory', location: normalizedOrigin },
+    { step: 'Warehouse', location: 'warehouse' },
+    { step: 'Transport', location: 'transport' },
+    { step: 'Destination', location: normalizedDestination }
+  ];
+
+  const segmentModes = ['truck', 'train', 'truck'];
+
+  for (let index = 0; index < steps.length; index += 1) {
+    steps[index].distance = 0;
+    steps[index].co2 = 0;
+  }
+
+  for (let index = 1; index < steps.length; index += 1) {
+    const sourceLocation = steps[index - 1].location;
+    const targetLocation = steps[index].location;
+    const segmentDistance = await getDistance(sourceLocation, targetLocation);
+    const segmentMode = segmentModes[index - 1] || 'truck';
+
+    steps[index].distance = Number(segmentDistance.toFixed(2));
+    steps[index].co2 = calculateCO2(steps[index].distance, segmentMode);
+    steps[index].mode = segmentMode;
+  }
+
+  // Timestamps
   const now = Date.now();
-
-  const journey = ROUTE_STEPS.map((entry, index) => {
-    const stepDistance = Number((totalDistance * entry.percent).toFixed(2));
-    const factor = STEP_FACTORS[entry.step] || 0.05;
-    const stepCo2 = Number((stepDistance * factor).toFixed(2));
-
-    return {
-      location: entry.step === 'Destination' ? destination : entry.location,
-      step: entry.step,
-      distance: stepDistance,
-      co2: stepCo2,
-      timestamp: new Date(now + index * 2 * 60 * 60 * 1000).toISOString(),
-      status: 'Success',
-      icon: entry.step,
-      productId
-    };
+  steps.forEach((s, i) => {
+    s.timestamp = new Date(now + i * 2 * 60 * 60 * 1000).toISOString();
+    s.status = 'Success';
+    s.icon = s.step;
+    s.productId = productId;
   });
-
-  const totalCO2 = Number(journey.reduce((sum, item) => sum + item.co2, 0).toFixed(2));
-  const efficiency = Number((1000 / Math.max(totalCO2, 1)).toFixed(2));
-  const rating = getRating(totalCO2);
+  // Total distance/CO2
+  const totalDistance = Number(steps.reduce((sum, step) => sum + (Number(step.distance) || 0), 0).toFixed(2));
+  const totalCO2 = Number(steps.reduce((sum, step) => sum + (Number(step.co2) || 0), 0).toFixed(2));
+  const aiSuggestion = getAISuggestion(totalCO2);
+  const efficiency = getEfficiencyScore(totalCO2, totalDistance);
+  const ecoRating = getEcoRating(totalCO2);
+  const anomaly = isHighEmission(totalCO2);
 
   return {
     productId,
-    destination,
+    origin: normalizedOrigin,
+    destination: normalizedDestination,
     totalDistance,
     totalCO2,
     efficiency,
-    rating,
-    journey
+    ecoRating,
+    anomaly,
+    aiSuggestion,
+    journey: steps
   };
 }
 
-app.post('/add', async (req, res) => {
+function buildSmartJourneyFallback(productId, origin, destination) {
+  const normalizedOrigin = String(origin || 'factory').trim().toLowerCase();
+  const normalizedDestination = String(destination || '').trim().toLowerCase();
+  const now = Date.now();
+
+  const journey = [
+    { step: 'Factory', location: normalizedOrigin, distance: 0, co2: 0, mode: 'truck' },
+    { step: 'Warehouse', location: 'warehouse', distance: 24, co2: calculateCO2(24, 'truck'), mode: 'truck' },
+    { step: 'Transport', location: 'transport', distance: 42, co2: calculateCO2(42, 'train'), mode: 'train' },
+    { step: 'Destination', location: normalizedDestination, distance: 120, co2: calculateCO2(120, 'truck'), mode: 'truck' }
+  ].map((step, index) => ({
+    ...step,
+    timestamp: new Date(now + index * 2 * 60 * 60 * 1000).toISOString(),
+    status: 'Success',
+    icon: step.step,
+    productId
+  }));
+
+  const totalDistance = Number(journey.reduce((sum, step) => sum + step.distance, 0).toFixed(2));
+  const totalCO2 = Number(journey.reduce((sum, step) => sum + step.co2, 0).toFixed(2));
+
+  return {
+    productId,
+    origin: normalizedOrigin,
+    destination: normalizedDestination,
+    totalDistance,
+    totalCO2,
+    efficiency: getEfficiencyScore(totalCO2, totalDistance),
+    ecoRating: getEcoRating(totalCO2),
+    anomaly: isHighEmission(totalCO2),
+    aiSuggestion: getAISuggestion(totalCO2),
+    journey,
+    fallback: true
+  };
+}
+// --- New Smart Trace API ---
+app.post('/smart-trace', async (req, res) => {
+  try {
+    const { productId, origin, destination } = req.body || {};
+    if (!productId || !destination) {
+      return res.status(400).json({
+        success: false,
+        message: 'productId and destination are required.'
+      });
+    }
+
+    const cleanOrigin = String(origin || 'factory').trim();
+    const cleanDestination = String(destination).trim();
+    const trace = await buildSmartJourney(String(productId).trim(), cleanOrigin, cleanDestination);
+
+    return res.json({
+      success: true,
+      ...trace
+    });
+  } catch (error) {
+    console.error('POST /smart-trace error:', error);
+
+    try {
+      const fallback = buildSmartJourneyFallback(
+        String(req.body?.productId || '').trim(),
+        String(req.body?.origin || 'factory').trim(),
+        String(req.body?.destination || '').trim()
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: 'Using fallback smart trace data.',
+        ...fallback
+      });
+    } catch (_fallbackError) {
+      return res.status(500).json({
+        success: false,
+        message: error.message || 'Failed to generate smart trace.'
+      });
+    }
+  }
+});
+
+async function handleAddEntry(req, res) {
   try {
     const { companyName, productName, co2Emission, journey } = req.body;
 
@@ -278,32 +503,40 @@ app.post('/add', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('POST /add error:', error);
+    console.error('POST /add-entry error:', error);
     return res.status(500).json({
       success: false,
       message: 'Failed to add entry.'
     });
   }
-});
+}
 
+app.post('/add-entry', handleAddEntry);
+app.post('/add', handleAddEntry);
+
+
+// --- Improved verification message ---
 app.get('/get/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const db = await readDatabase();
     const entry = db.entries.find((item) => item.id === id);
-
     if (!entry) {
       return res.status(404).json({
         success: false,
         message: 'Record not found.'
       });
     }
-
+    // Recompute hash for verification
+    const recomputedHash = generateHash(entry);
+    let verificationStatus = 'Data Integrity Maintained';
+    if (recomputedHash !== entry.hash) verificationStatus = 'Data Modified After Storage';
+    if (entry.txHash) verificationStatus += ' (Blockchain Verified)';
     return res.json({
       success: true,
       data: {
         ...entry,
-        verificationStatus: entry.txHash ? 'Verified on Blockchain' : 'Verified'
+        verificationStatus
       }
     });
   } catch (error) {
@@ -351,9 +584,54 @@ app.get('/entries/:id', async (req, res) => {
   }
 });
 
-app.post('/generate-trace', (req, res) => {
+app.post('/verify', async (req, res) => {
   try {
-    const { productId, destination } = req.body || {};
+    const { id } = req.body || {};
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: 'id is required.'
+      });
+    }
+
+    const db = await readDatabase();
+    const entry = db.entries.find((item) => item.id === String(id).trim());
+
+    if (!entry) {
+      return res.status(404).json({
+        success: false,
+        message: 'Record not found.'
+      });
+    }
+
+    const recomputedHash = generateHash(entry);
+    const verified = recomputedHash === entry.hash;
+
+    return res.json({
+      success: true,
+      data: {
+        id: entry.id,
+        verified,
+        verificationStatus: verified ? 'Data Integrity Maintained' : 'Data Modified After Storage',
+        storedHash: entry.hash,
+        recomputedHash,
+        txHash: entry.txHash || null,
+        entry
+      }
+    });
+  } catch (error) {
+    console.error('POST /verify error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to verify entry.'
+    });
+  }
+});
+
+app.post('/generate-trace', async (req, res) => {
+  try {
+    const { productId, origin, destination } = req.body || {};
 
     if (!productId || !destination) {
       return res.status(400).json({
@@ -363,14 +641,18 @@ app.post('/generate-trace', (req, res) => {
     }
 
     const cleanProductId = String(productId).trim();
+    const cleanOrigin = String(origin || 'factory').trim();
     const cleanDestination = String(destination).trim();
-    const trace = buildSmartJourney(cleanProductId, cleanDestination);
+    const trace = await buildSmartJourney(cleanProductId, cleanOrigin, cleanDestination);
 
     return res.json({
       success: true,
+      totalDistance: trace.totalDistance,
       totalCO2: trace.totalCO2,
       efficiency: trace.efficiency,
-      rating: trace.rating,
+      rating: trace.ecoRating,
+      aiSuggestion: trace.aiSuggestion,
+      anomaly: trace.anomaly,
       journey: trace.journey,
       data: trace
     });
@@ -385,6 +667,12 @@ app.post('/generate-trace', (req, res) => {
 
 app.get('/trace', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'trace.html'));
+});
+
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.use('/api', (req, res) => {
+  res.status(404).json({ success: false, message: 'API route not found.' });
 });
 
 app.use((error, req, res, next) => {
