@@ -320,92 +320,41 @@ async function loadStoredTrace(id) {
 }
 
 
-// --- Smart trace loader: supports /smart-trace API for real calculation ---
+// --- Direct data rendering: no DB fetch required 🔥 ---
 async function loadTraceJourney() {
   const params = new URLSearchParams(window.location.search);
-  const id = params.get('id');
-  const dataPayload = parseDataFromUrl();
-  const smartTrace = params.get('smart') === '1';
+  const dataParam = params.get('data');
 
-  if (!id && !dataPayload && !smartTrace) {
-    setState('Record not found', 'error');
+  // 🔥 Direct data use (no DB fetch)
+  if (!dataParam) {
+    document.body.innerHTML = '<h2 style="color: #ff5579; text-align: center; margin-top: 40px;">❌ No trace data found. Please generate a trace first.</h2>';
     return;
   }
 
-  setState(dataPayload ? 'Calculating smart trace...' : 'Loading trace journey...', 'loading');
+  setState('Loading trace...', 'loading');
 
   try {
-    // If ?smart=1&origin=...&destination=...&productId=... is present, call /smart-trace
-    if (smartTrace) {
-      const origin = params.get('origin');
-      const destination = params.get('destination');
-      const productId = params.get('productId');
-      if (!origin || !destination || !productId) {
-        setState('Missing smart trace parameters', 'error');
-        return;
-      }
-      // Show spinner
-      setState('Calculating real route and CO₂...', 'loading');
-      const resp = await fetch('/smart-trace', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ origin, destination, productId })
-      });
-      const payload = await parseApiResponse(resp);
-      if (!resp.ok || !payload.success) {
-        const fallbackTrace = buildMockTrace({ productId, destination, origin });
-        renderMeta(fallbackTrace);
-        renderSummary(fallbackTrace.journey || [], fallbackTrace);
-        renderRouteVisualization(fallbackTrace.journey || []);
-        renderTimeline(fallbackTrace.journey || []);
-        bindDownloadReport(fallbackTrace, fallbackTrace.journey || []);
-        setState('Showing fallback trace data due to API issue.', 'empty');
-        return;
-      }
-      // Render real smart trace
-      renderMeta(payload);
-      renderSummary(payload.journey || [], payload);
-      renderRouteVisualization(payload.journey || []);
-      renderTimeline(payload.journey || []);
-      bindDownloadReport(payload, payload.journey || []);
-      hideState();
-      return;
+    let parsedData = null;
+    try {
+      parsedData = JSON.parse(decodeURIComponent(dataParam));
+    } catch (parseError) {
+      console.error('URL data parse failed:', parseError.message);
+      throw new Error('Invalid trace data format in URL');
     }
 
-    if (dataPayload) {
-      renderMeta(dataPayload);
-      renderSummary(dataPayload.journey || [], dataPayload);
-      renderRouteVisualization(dataPayload.journey || []);
-      renderTimeline(dataPayload.journey || []);
-      bindDownloadReport(dataPayload, dataPayload.journey || []);
-      hideState();
-      return;
+    // Validate parsed data has required fields
+    if (!parsedData || typeof parsedData !== 'object') {
+      throw new Error('Trace data is invalid');
     }
 
-    const item = await loadStoredTrace(id);
-    renderMeta(item);
-    renderSummary(item.journey || [], item);
-    renderRouteVisualization(item.journey || []);
-    renderTimeline(item.journey || []);
-    bindDownloadReport(item, item.journey || []);
+    // Render trace directly from URL parameter
+    renderMeta(parsedData);
+    renderSummary(parsedData.journey || [], parsedData);
+    renderRouteVisualization(parsedData.journey || []);
+    renderTimeline(parsedData.journey || []);
+    bindDownloadReport(parsedData, parsedData.journey || []);
     hideState();
   } catch (error) {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('smart') === '1') {
-      const fallbackTrace = buildMockTrace({
-        productId: params.get('productId') || 'N/A',
-        destination: params.get('destination') || 'unknown',
-        origin: params.get('origin') || 'factory'
-      });
-      renderMeta(fallbackTrace);
-      renderSummary(fallbackTrace.journey || [], fallbackTrace);
-      renderRouteVisualization(fallbackTrace.journey || []);
-      renderTimeline(fallbackTrace.journey || []);
-      bindDownloadReport(fallbackTrace, fallbackTrace.journey || []);
-      setState('API unavailable. Showing fallback trace data.', 'empty');
-      return;
-    }
-
     setState(error.message || 'Something went wrong while loading trace', 'error');
   }
 }
