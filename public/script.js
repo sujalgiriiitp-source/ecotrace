@@ -115,12 +115,12 @@ function setSmartTraceUiState(state, message = '') {
 }
 
 async function fetchSmartTrace(productId, destination, origin = 'factory') {
-  console.log('[FE] smart-trace request', { productId, destination, origin });
+  console.log('[FE] generate-trace request', { productId, destination, origin });
 
-  const { response, payload } = await postJson('/smart-trace', { productId, destination, origin });
+  const { response, payload } = await postJson('/generate-trace', { productId, destination, origin });
 
   if (!response.ok || !payload?.success) {
-    throw new Error(payload?.message || 'Unable to generate smart trace.');
+    throw new Error(payload?.message || 'Unable to generate trace.');
   }
 
   return payload;
@@ -690,9 +690,10 @@ async function addEntry(event) {
     renderEntries();
 
     // Show success message
+    const shortId = String(result.data.id || '').slice(0, 12);
     const message = result.data.txHash
-      ? `✅ Stored on Blockchain! Hash: ${result.data.hash.slice(0, 10)}...`
-      : `✅ Entry added! Hash: ${result.data.hash.slice(0, 10)}...`;
+      ? `✅ Stored on Blockchain! ID: ${shortId}...`
+      : `✅ Entry added! ID: ${shortId}...`;
     showToast(message, 'success');
 
     // Scroll to new entry
@@ -731,19 +732,26 @@ async function generateSmartTrace(event) {
 
   try {
     const payload = await fetchSmartTrace(productId, destination, 'factory');
-    const journey = Array.isArray(payload.journey) ? payload.journey : [];
+    const payloadData = payload?.data || {};
+    const journey = Array.isArray(payload.journey)
+      ? payload.journey
+      : (Array.isArray(payloadData.journey) ? payloadData.journey : []);
 
-    const totalDistance = Number(payload.totalDistance) || Number(payload?.data?.totalDistance) || 0;
-    const totalCO2 = Number(payload.totalCO2) || Number(payload?.data?.totalCO2) || 0;
+    if (journey.length === 0) {
+      throw new Error('Journey data is unavailable for this product.');
+    }
+
+    const totalDistance = Number(payload.totalDistance) || Number(payloadData.totalDistance) || 0;
+    const totalCO2 = Number(payload.totalCO2) || Number(payloadData.totalCO2) || 0;
     const recalculatedCO2 = Number(journey.reduce((sum, step) => {
       const mode = step.mode || 'truck';
       return sum + calculateCO2(step.distance, mode);
     }, 0).toFixed(2));
 
     const tracePayload = {
-      productId,
-      origin: payload.origin || 'factory',
-      destination,
+      productId: payloadData.entryId || payloadData.productId || productId,
+      origin: payload.origin || payloadData.origin || 'factory',
+      destination: payload.destination || payloadData.destination || destination,
       totalDistance,
       totalCO2: totalCO2 || recalculatedCO2,
       efficiency: Number(payload.efficiency) || 0,

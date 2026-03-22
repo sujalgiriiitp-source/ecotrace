@@ -4,9 +4,6 @@ const path = require('path');
 const fs = require('fs').promises;
 const crypto = require('crypto');
 const Web3 = require('web3');
-
-
-const axios = require('axios');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const DB_PATH = path.join(__dirname, 'database.json');
@@ -186,6 +183,105 @@ function normalizeJourney(entry) {
   });
 }
 
+function normalizeSearchValue(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
+}
+
+function findEntryByProductId(entries, productIdInput) {
+  const rawInput = String(productIdInput || '').trim();
+  const normalizedInput = normalizeSearchValue(rawInput);
+
+  if (!rawInput || !normalizedInput) {
+    return null;
+  }
+
+  const getCandidates = (entry) => {
+    const values = [
+      entry.id,
+      entry.productId,
+      entry.productName,
+      entry.companyName
+    ]
+      .filter(Boolean)
+      .map((value) => String(value).trim());
+
+    return {
+      raw: values,
+      normalized: values.map((value) => normalizeSearchValue(value))
+    };
+  };
+
+  const exactMatch = entries.find((entry) => {
+    const candidates = getCandidates(entry);
+    return candidates.raw.some((value) => value.toLowerCase() === rawInput.toLowerCase())
+      || candidates.normalized.some((value) => value === normalizedInput);
+  });
+  if (exactMatch) {
+    return exactMatch;
+  }
+
+  const partialMatch = entries.find((entry) => {
+    const candidates = getCandidates(entry);
+    return candidates.raw.some((value) => value.toLowerCase().includes(rawInput.toLowerCase()))
+      || candidates.normalized.some((value) => value.includes(normalizedInput));
+  });
+
+  return partialMatch || null;
+}
+
+function buildTraceFromEntry(entry, destination, origin = 'factory') {
+  const safeDestination = String(destination || 'destination').trim() || 'destination';
+  const safeOrigin = String(origin || 'factory').trim() || 'factory';
+  const totalCO2 = Number(entry?.co2Emission) || 0;
+
+  const steps = [
+    { step: 'Factory', location: safeOrigin, distance: 120, share: 0.25, mode: 'truck' },
+    { step: 'Warehouse', location: 'warehouse', distance: 180, share: 0.25, mode: 'truck' },
+    { step: 'Transport', location: 'transport', distance: 260, share: 0.35, mode: 'train' },
+    { step: 'Destination', location: safeDestination, distance: 90, share: 0.15, mode: 'truck' }
+  ];
+
+  const now = Date.now();
+  const journey = steps.map((step, index) => {
+    const co2 = Number((totalCO2 * step.share).toFixed(2));
+    return {
+      step: step.step,
+      location: step.location,
+      distance: step.distance,
+      mode: step.mode,
+      co2,
+      timestamp: new Date(now + (index * 2 * 60 * 60 * 1000)).toISOString(),
+      status: 'Success'
+    };
+  });
+
+  const co2Delta = Number((totalCO2 - journey.reduce((sum, item) => sum + item.co2, 0)).toFixed(2));
+  if (journey.length > 0 && co2Delta !== 0) {
+    const last = journey[journey.length - 1];
+    last.co2 = Number((last.co2 + co2Delta).toFixed(2));
+  }
+
+  const totalDistance = Number(journey.reduce((sum, step) => sum + (Number(step.distance) || 0), 0).toFixed(2));
+  const normalizedJourney = normalizeJourney({
+    journey,
+    createdAt: entry?.createdAt || new Date().toISOString()
+  });
+
+  return {
+    productId: String(entry?.id || ''),
+    sourceProductInput: String(entry?.productId || entry?.productName || ''),
+    origin: safeOrigin,
+    destination: safeDestination,
+    totalDistance,
+    totalCO2: Number(totalCO2.toFixed(2)),
+    journey: normalizedJourney,
+    generatedAt: new Date().toISOString()
+  };
+}
+
 const STEP_FACTORS = {
   Factory: 0.08,
   Warehouse: 0.05,
@@ -253,21 +349,32 @@ async function getDistance(origin, destination) {
 
   const url = 'https://api.openrouteservice.org/v2/directions/driving-car';
   try {
-    const resp = await axios.post(url, {
-      coordinates: [start, end]
-    }, {
+    const response = await fetch(url, {
+      method: 'POST',
       headers: {
         'Authorization': apiKey,
         'Content-Type': 'application/json'
-      }
+      },
+      body: JSON.stringify({ coordinates: [start, end] })
     });
-    const meters = resp.data.routes[0].summary.distance;
+
+    if (!response.ok) {
+      const errPayload = await response.text();
+      throw new Error(`OpenRouteService API error: ${errPayload || response.statusText}`);
+    }
+
+    const payload = await response.json();
+    const meters = payload?.routes?.[0]?.summary?.distance;
+    if (!Number.isFinite(meters)) {
+      throw new Error('OpenRouteService API error: Invalid distance response.');
+    }
+
     return meters / 1000; // km
   } catch (err) {
     if (fallbackDistance) {
       return fallbackDistance;
     }
-    throw new Error('OpenRouteService API error: ' + (err.response?.data?.error || err.message));
+    throw new Error('OpenRouteService API error: ' + err.message);
   }
 }
 
@@ -643,18 +750,38 @@ app.post('/generate-trace', async (req, res) => {
     const cleanProductId = String(productId).trim();
     const cleanOrigin = String(origin || 'factory').trim();
     const cleanDestination = String(destination).trim();
-    const trace = await buildSmartJourney(cleanProductId, cleanOrigin, cleanDestination);
+    const db = await readDatabase();
+    const entry = findEntryByProductId(db.entries || [], cleanProductId);
+
+    if (!entry) {
+      return res.status(404).json({
+        success: false,
+        message: 'Product not found. Try full/partial ID, product name, or company name.'
+      });
+    }
+
+    const trace = buildTraceFromEntry(entry, cleanDestination, cleanOrigin);
+
+    entry.journey = trace.journey;
+    entry.lastTraceDestination = trace.destination;
+    entry.lastTraceGeneratedAt = trace.generatedAt;
+    await writeDatabase(db);
 
     return res.json({
       success: true,
       totalDistance: trace.totalDistance,
       totalCO2: trace.totalCO2,
-      efficiency: trace.efficiency,
-      rating: trace.ecoRating,
-      aiSuggestion: trace.aiSuggestion,
-      anomaly: trace.anomaly,
+      efficiency: getEfficiencyScore(trace.totalCO2, trace.totalDistance),
+      rating: getRating(trace.totalCO2),
+      aiSuggestion: getAISuggestion(trace.totalCO2),
+      anomaly: isHighEmission(trace.totalCO2),
       journey: trace.journey,
-      data: trace
+      data: {
+        ...trace,
+        entryId: entry.id,
+        companyName: entry.companyName,
+        productName: entry.productName
+      }
     });
   } catch (error) {
     console.error('POST /generate-trace error:', error);
