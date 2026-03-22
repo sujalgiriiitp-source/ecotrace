@@ -10,18 +10,36 @@
       "journey": [
         {
           "location": "Factory",
-          "status": "Manufactured",
-          "co2": 449.55
+          "step": "Step 1",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 449.55,
+          "timestamp": "2026-03-20T04:00:34.355Z",
+          "status": "Pending",
+          "icon": "Step 1",
+          "productId": "3a677c89-b12a-4b82-b950-ed76c8e30708"
         },
         {
           "location": "Warehouse",
-          "status": "Stored",
-          "co2": 299.7
+          "step": "Step 2",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 299.7,
+          "timestamp": "2026-03-20T04:00:34.355Z",
+          "status": "Pending",
+          "icon": "Step 2",
+          "productId": "3a677c89-b12a-4b82-b950-ed76c8e30708"
         },
         {
           "location": "City",
-          "status": "Delivered",
-          "co2": 249.75
+          "step": "Step 3",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 249.75,
+          "timestamp": "2026-03-20T04:00:34.355Z",
+          "status": "Pending",
+          "icon": "Step 3",
+          "productId": "3a677c89-b12a-4b82-b950-ed76c8e30708"
         }
       ]
     },
@@ -35,18 +53,36 @@
       "journey": [
         {
           "location": "Factory",
-          "status": "Manufactured",
-          "co2": 5.55
+          "step": "Step 1",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 5.55,
+          "timestamp": "2026-03-20T04:12:22.199Z",
+          "status": "Pending",
+          "icon": "Step 1",
+          "productId": "517cd1c0-2f72-4202-8a0a-79bc32be3b43"
         },
         {
           "location": "Warehouse",
-          "status": "Stored",
-          "co2": 3.7
+          "step": "Step 2",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 3.7,
+          "timestamp": "2026-03-20T04:12:22.199Z",
+          "status": "Pending",
+          "icon": "Step 2",
+          "productId": "517cd1c0-2f72-4202-8a0a-79bc32be3b43"
         },
         {
           "location": "City",
-          "status": "Delivered",
-          "co2": 3.09
+          "step": "Step 3",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 3.09,
+          "timestamp": "2026-03-20T04:12:22.199Z",
+          "status": "Pending",
+          "icon": "Step 3",
+          "productId": "517cd1c0-2f72-4202-8a0a-79bc32be3b43"
         }
       ]
     },
@@ -60,18 +96,36 @@
       "journey": [
         {
           "location": "Factory",
-          "status": "Manufactured",
-          "co2": 30.15
+          "step": "Step 1",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 30.15,
+          "timestamp": "2026-03-20T04:17:59.173Z",
+          "status": "Pending",
+          "icon": "Step 1",
+          "productId": "f6009ec6-211a-44fd-8c83-2faaf96497cd"
         },
         {
           "location": "Warehouse",
-          "status": "Stored",
-          "co2": 20.1
+          "step": "Step 2",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 20.1,
+          "timestamp": "2026-03-20T04:17:59.173Z",
+          "status": "Pending",
+          "icon": "Step 2",
+          "productId": "f6009ec6-211a-44fd-8c83-2faaf96497cd"
         },
         {
           "location": "City",
-          "status": "Delivered",
-          "co2": 16.75
+          "step": "Step 3",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 16.75,
+          "timestamp": "2026-03-20T04:17:59.173Z",
+          "status": "Pending",
+          "icon": "Step 3",
+          "productId": "f6009ec6-211a-44fd-8c83-2faaf96497cd"
         }
       ]
     },
@@ -85,18 +139,36 @@
       "journey": [
         {
           "location": "Factory",
-          "status": "Manufactured",
-          "co2": 30.15
+          "step": "Step 1",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 30.15,
+          "timestamp": "2026-03-20T04:23:05.137Z",
+          "status": "Pending",
+          "icon": "Step 1",
+          "productId": "cae97c89-8abc-428d-9457-76d88563f652"
         },
         {
           "location": "Warehouse",
-          "status": "Stored",
-          "co2": 20.1
+          "step": "Step 2",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 20.1,
+          "timestamp": "2026-03-20T04:23:05.137Z",
+          "status": "Pending",
+          "icon": "Step 2",
+          "productId": "cae97c89-8abc-428d-9457-76d88563f652"
         },
         {
           "location": "City",
-          "status": "Delivered",
-          "co2": 16.75
+          "step": "Step 3",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 16.75,
+          "timestamp": "2026-03-20T04:23:05.137Z",
+          "status": "Pending",
+          "icon": "Step 3",
+          "productId": "cae97c89-8abc-428d-9457-76d88563f652"
         }
       ]
     },
@@ -110,21 +182,52 @@
       "txHash": null,
       "journey": [
         {
-          "location": "Factory",
-          "status": "Manufactured",
-          "co2": 20.25
+          "location": "factory",
+          "step": "Factory",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 26.32,
+          "timestamp": "2026-03-22T08:06:40.485Z",
+          "status": "Success",
+          "icon": "Factory",
+          "productId": "05ac2d54-7fa0-41c0-b09a-171268772be7"
         },
         {
-          "location": "Warehouse",
-          "status": "Stored",
-          "co2": 13.5
+          "location": "warehouse",
+          "step": "Warehouse",
+          "distance": 24,
+          "mode": "truck",
+          "co2": 5.26,
+          "timestamp": "2026-03-22T10:06:40.485Z",
+          "status": "Success",
+          "icon": "Warehouse",
+          "productId": "05ac2d54-7fa0-41c0-b09a-171268772be7"
         },
         {
-          "location": "City",
-          "status": "Delivered",
-          "co2": 11.25
+          "location": "transport",
+          "step": "Transport",
+          "distance": 42,
+          "mode": "train",
+          "co2": 5.53,
+          "timestamp": "2026-03-22T12:06:40.485Z",
+          "status": "Success",
+          "icon": "Transport",
+          "productId": "05ac2d54-7fa0-41c0-b09a-171268772be7"
+        },
+        {
+          "location": "Delhi",
+          "step": "Destination",
+          "distance": 36,
+          "mode": "truck",
+          "co2": 7.89,
+          "timestamp": "2026-03-22T14:06:40.485Z",
+          "status": "Success",
+          "icon": "Destination",
+          "productId": "05ac2d54-7fa0-41c0-b09a-171268772be7"
         }
-      ]
+      ],
+      "lastTraceDestination": "Delhi",
+      "lastTraceGeneratedAt": "2026-03-22T08:06:40.485Z"
     },
     {
       "id": "2b7c0cc3-4cf5-4d40-bfe6-4dab67772e8b",
@@ -137,18 +240,36 @@
       "journey": [
         {
           "location": "Factory",
-          "status": "Manufactured",
-          "co2": 6.74
+          "step": "Step 1",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 6.74,
+          "timestamp": "2026-03-20T06:35:58.168Z",
+          "status": "Pending",
+          "icon": "Step 1",
+          "productId": "2b7c0cc3-4cf5-4d40-bfe6-4dab67772e8b"
         },
         {
           "location": "Warehouse",
-          "status": "Stored",
-          "co2": 4.49
+          "step": "Step 2",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 4.49,
+          "timestamp": "2026-03-20T06:35:58.168Z",
+          "status": "Pending",
+          "icon": "Step 2",
+          "productId": "2b7c0cc3-4cf5-4d40-bfe6-4dab67772e8b"
         },
         {
           "location": "City",
-          "status": "Delivered",
-          "co2": 3.74
+          "step": "Step 3",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 3.74,
+          "timestamp": "2026-03-20T06:35:58.168Z",
+          "status": "Pending",
+          "icon": "Step 3",
+          "productId": "2b7c0cc3-4cf5-4d40-bfe6-4dab67772e8b"
         }
       ]
     },
@@ -163,18 +284,36 @@
       "journey": [
         {
           "location": "Factory",
-          "status": "Manufactured",
-          "co2": 30.15
+          "step": "Step 1",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 30.15,
+          "timestamp": "2026-03-20T06:37:30.233Z",
+          "status": "Pending",
+          "icon": "Step 1",
+          "productId": "8a0d6420-0ec6-4876-a372-643e0c3a080c"
         },
         {
           "location": "Warehouse",
-          "status": "Stored",
-          "co2": 20.1
+          "step": "Step 2",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 20.1,
+          "timestamp": "2026-03-20T06:37:30.233Z",
+          "status": "Pending",
+          "icon": "Step 2",
+          "productId": "8a0d6420-0ec6-4876-a372-643e0c3a080c"
         },
         {
           "location": "City",
-          "status": "Delivered",
-          "co2": 16.75
+          "step": "Step 3",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 16.75,
+          "timestamp": "2026-03-20T06:37:30.233Z",
+          "status": "Pending",
+          "icon": "Step 3",
+          "productId": "8a0d6420-0ec6-4876-a372-643e0c3a080c"
         }
       ]
     },
@@ -189,18 +328,36 @@
       "journey": [
         {
           "location": "Factory",
-          "status": "Manufactured",
-          "co2": 8.33
+          "step": "Step 1",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 8.33,
+          "timestamp": "2026-03-20T07:39:44.601Z",
+          "status": "Pending",
+          "icon": "Step 1",
+          "productId": "dbeabc83-8d2f-4990-9490-896cc8e2dd41"
         },
         {
           "location": "Warehouse",
-          "status": "Stored",
-          "co2": 5.55
+          "step": "Step 2",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 5.55,
+          "timestamp": "2026-03-20T07:39:44.601Z",
+          "status": "Pending",
+          "icon": "Step 2",
+          "productId": "dbeabc83-8d2f-4990-9490-896cc8e2dd41"
         },
         {
           "location": "City",
-          "status": "Delivered",
-          "co2": 4.62
+          "step": "Step 3",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 4.62,
+          "timestamp": "2026-03-20T07:39:44.601Z",
+          "status": "Pending",
+          "icon": "Step 3",
+          "productId": "dbeabc83-8d2f-4990-9490-896cc8e2dd41"
         }
       ]
     },
@@ -215,18 +372,36 @@
       "journey": [
         {
           "location": "Factory",
-          "status": "Manufactured",
-          "co2": 94.84
+          "step": "Step 1",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 94.84,
+          "timestamp": "2026-03-20T07:39:44.610Z",
+          "status": "Pending",
+          "icon": "Step 1",
+          "productId": "2cced584-b3b3-478c-b0a2-49c27d0d104b"
         },
         {
           "location": "Warehouse",
-          "status": "Stored",
-          "co2": 63.22
+          "step": "Step 2",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 63.22,
+          "timestamp": "2026-03-20T07:39:44.610Z",
+          "status": "Pending",
+          "icon": "Step 2",
+          "productId": "2cced584-b3b3-478c-b0a2-49c27d0d104b"
         },
         {
           "location": "City",
-          "status": "Delivered",
-          "co2": 52.69
+          "step": "Step 3",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 52.69,
+          "timestamp": "2026-03-20T07:39:44.610Z",
+          "status": "Pending",
+          "icon": "Step 3",
+          "productId": "2cced584-b3b3-478c-b0a2-49c27d0d104b"
         }
       ]
     },
@@ -241,18 +416,36 @@
       "journey": [
         {
           "location": "Factory",
-          "status": "Manufactured",
-          "co2": 4.14
+          "step": "Step 1",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 4.14,
+          "timestamp": "2026-03-20T07:39:44.616Z",
+          "status": "Pending",
+          "icon": "Step 1",
+          "productId": "19c87cf7-625e-4291-aa0e-7922b431a9ee"
         },
         {
           "location": "Warehouse",
-          "status": "Stored",
-          "co2": 2.76
+          "step": "Step 2",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 2.76,
+          "timestamp": "2026-03-20T07:39:44.616Z",
+          "status": "Pending",
+          "icon": "Step 2",
+          "productId": "19c87cf7-625e-4291-aa0e-7922b431a9ee"
         },
         {
           "location": "City",
-          "status": "Delivered",
-          "co2": 2.3
+          "step": "Step 3",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 2.3,
+          "timestamp": "2026-03-20T07:39:44.616Z",
+          "status": "Pending",
+          "icon": "Step 3",
+          "productId": "19c87cf7-625e-4291-aa0e-7922b431a9ee"
         }
       ]
     },
@@ -267,18 +460,36 @@
       "journey": [
         {
           "location": "Factory",
-          "status": "Manufactured",
-          "co2": 19.13
+          "step": "Step 1",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 19.13,
+          "timestamp": "2026-03-20T14:05:55.339Z",
+          "status": "Pending",
+          "icon": "Step 1",
+          "productId": "65de3652-b591-4836-a953-7b6271425748"
         },
         {
           "location": "Warehouse",
-          "status": "Stored",
-          "co2": 12.75
+          "step": "Step 2",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 12.75,
+          "timestamp": "2026-03-20T14:05:55.339Z",
+          "status": "Pending",
+          "icon": "Step 2",
+          "productId": "65de3652-b591-4836-a953-7b6271425748"
         },
         {
           "location": "City",
-          "status": "Delivered",
-          "co2": 10.62
+          "step": "Step 3",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 10.62,
+          "timestamp": "2026-03-20T14:05:55.339Z",
+          "status": "Pending",
+          "icon": "Step 3",
+          "productId": "65de3652-b591-4836-a953-7b6271425748"
         }
       ]
     },
@@ -293,18 +504,36 @@
       "journey": [
         {
           "location": "Factory",
-          "status": "Manufactured",
-          "co2": 35.99
+          "step": "Step 1",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 35.99,
+          "timestamp": "2026-03-20T14:12:38.467Z",
+          "status": "Pending",
+          "icon": "Step 1",
+          "productId": "03e5e2ed-9020-429f-9f71-8a4f7710cedc"
         },
         {
           "location": "Warehouse",
-          "status": "Stored",
-          "co2": 23.99
+          "step": "Step 2",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 23.99,
+          "timestamp": "2026-03-20T14:12:38.467Z",
+          "status": "Pending",
+          "icon": "Step 2",
+          "productId": "03e5e2ed-9020-429f-9f71-8a4f7710cedc"
         },
         {
           "location": "City",
-          "status": "Delivered",
-          "co2": 20
+          "step": "Step 3",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 20,
+          "timestamp": "2026-03-20T14:12:38.467Z",
+          "status": "Pending",
+          "icon": "Step 3",
+          "productId": "03e5e2ed-9020-429f-9f71-8a4f7710cedc"
         }
       ]
     },
@@ -317,18 +546,36 @@
       "journey": [
         {
           "location": "Factory",
-          "status": "Manufactured",
-          "co2": 30
+          "step": "Step 1",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 30,
+          "timestamp": "2026-03-21T11:25:19.817Z",
+          "status": "Pending",
+          "icon": "Step 1",
+          "productId": "23a76f4d-57fb-4eef-a9d6-90b421bf7a8a"
         },
         {
           "location": "Warehouse",
-          "status": "Stored",
-          "co2": 20
+          "step": "Step 2",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 20,
+          "timestamp": "2026-03-21T11:25:19.817Z",
+          "status": "Pending",
+          "icon": "Step 2",
+          "productId": "23a76f4d-57fb-4eef-a9d6-90b421bf7a8a"
         },
         {
           "location": "Mumbai",
-          "status": "Delivered",
-          "co2": 17
+          "step": "Step 3",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 17,
+          "timestamp": "2026-03-21T11:25:19.817Z",
+          "status": "Pending",
+          "icon": "Step 3",
+          "productId": "23a76f4d-57fb-4eef-a9d6-90b421bf7a8a"
         }
       ],
       "hash": "7a87d5e4a3a33f997ddaf9a5a7f09cb1002949c9e1b1cadc021c4c34327a2a34",
@@ -344,13 +591,476 @@
         {
           "location": "Mumbai",
           "step": "Production",
+          "distance": 0,
+          "mode": "truck",
           "co2": 20,
           "timestamp": "2026-03-20",
-          "status": "Success"
+          "status": "Success",
+          "icon": "Production",
+          "productId": "d311474d-4a45-44b7-8432-d8b1edd8c4cc"
         }
       ],
       "hash": "cd917f848cbf5561f7b9d7bf821f1fb70fec439fe846d98e36c01e43ba035fb1",
       "txHash": null
+    },
+    {
+      "id": "fa6fa236-2343-4d40-aab3-ab9068ab531e",
+      "companyName": "greenfoods",
+      "productName": "Organic snack",
+      "co2Emission": 50,
+      "createdAt": "2026-03-22T07:50:24.124Z",
+      "journey": [],
+      "hash": "9555a02aab99deaeaed1d1c7f22883a957b6ddff0a98c4d7e8d8f43752bcff8d",
+      "txHash": null
+    },
+    {
+      "id": "26cdca48-ed60-41d2-9718-e1ad292cee02",
+      "companyName": "greenfoods",
+      "productName": "Organic snack",
+      "co2Emission": 80,
+      "createdAt": "2026-03-22T07:51:01.007Z",
+      "journey": [],
+      "hash": "21b7a8c11063d5bb25aa7dc548254da0b5db7fecd8c8cb309d1cbeb66b6092ad",
+      "txHash": null
+    },
+    {
+      "id": "c4e8c386-bca0-4003-b358-93e127ed2083",
+      "companyName": "HackCo",
+      "productName": "Widget-X1",
+      "co2Emission": 95,
+      "createdAt": "2026-03-22T08:03:13.184Z",
+      "journey": [],
+      "hash": "85f99489b0c037ec228ad268749b3b5b5406f594663823e88e1ac7d6211ae1dc",
+      "txHash": null
+    },
+    {
+      "id": "524a51e2-7e4b-484f-8c9e-b222d31265d1",
+      "companyName": "TestCorp",
+      "productName": "Product-A",
+      "co2Emission": 75,
+      "createdAt": "2026-03-22T08:04:14.033Z",
+      "journey": [],
+      "hash": "c3b14a281893505a77a2c657ea435d53c848be2c64cd159efed3029e5f059029",
+      "txHash": null
+    },
+    {
+      "id": "a3dc3038-a1fc-418e-becb-ef1f25792973",
+      "companyName": "TestCorp",
+      "productName": "Product-A",
+      "co2Emission": 75,
+      "createdAt": "2026-03-22T08:04:25.688Z",
+      "journey": [],
+      "hash": "e9aad822d24984487766e70bce027a2e982a83fe879b19440eb3eb7c5183c61a",
+      "txHash": null
+    },
+    {
+      "id": "a5f298bf-8d6c-4179-ac49-77215a07f9af",
+      "companyName": "DebugCorp",
+      "productName": "Debug-Prod",
+      "co2Emission": 50,
+      "createdAt": "2026-03-22T08:04:31.153Z",
+      "journey": [],
+      "hash": "43f6c8274c1227b5d718c88b7a049c3b2216590633247f44a9899abd6a4b8e8e",
+      "txHash": null
+    },
+    {
+      "id": "f0c6f8db-7332-40c0-9576-5746dc316f56",
+      "companyName": "TestCorp",
+      "productName": "Product-A",
+      "co2Emission": 75,
+      "createdAt": "2026-03-22T08:05:19.492Z",
+      "journey": [
+        {
+          "location": "factory",
+          "step": "Factory",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 43.86,
+          "timestamp": "2026-03-22T08:05:19.526Z",
+          "status": "Success",
+          "icon": "Factory",
+          "productId": "f0c6f8db-7332-40c0-9576-5746dc316f56"
+        },
+        {
+          "location": "warehouse",
+          "step": "Warehouse",
+          "distance": 24,
+          "mode": "truck",
+          "co2": 8.77,
+          "timestamp": "2026-03-22T10:05:19.526Z",
+          "status": "Success",
+          "icon": "Warehouse",
+          "productId": "f0c6f8db-7332-40c0-9576-5746dc316f56"
+        },
+        {
+          "location": "transport",
+          "step": "Transport",
+          "distance": 42,
+          "mode": "train",
+          "co2": 9.21,
+          "timestamp": "2026-03-22T12:05:19.526Z",
+          "status": "Success",
+          "icon": "Transport",
+          "productId": "f0c6f8db-7332-40c0-9576-5746dc316f56"
+        },
+        {
+          "location": "delhi",
+          "step": "Destination",
+          "distance": 36,
+          "mode": "truck",
+          "co2": 13.16,
+          "timestamp": "2026-03-22T14:05:19.526Z",
+          "status": "Success",
+          "icon": "Destination",
+          "productId": "f0c6f8db-7332-40c0-9576-5746dc316f56"
+        }
+      ],
+      "hash": "10d0850a0658444a4c4da6c58ec831a402e1d88a026cd723174099e074006ccc",
+      "txHash": null,
+      "lastTraceDestination": "delhi",
+      "lastTraceGeneratedAt": "2026-03-22T08:05:19.526Z"
+    },
+    {
+      "id": "cfa5f54d-6d2f-438b-a6b5-e7ccf96e6d36",
+      "companyName": "TestCorp",
+      "productName": "Product-A",
+      "co2Emission": 75,
+      "createdAt": "2026-03-22T08:05:24.896Z",
+      "journey": [
+        {
+          "location": "factory",
+          "step": "Factory",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 43.86,
+          "timestamp": "2026-03-22T08:05:24.927Z",
+          "status": "Success",
+          "icon": "Factory",
+          "productId": "cfa5f54d-6d2f-438b-a6b5-e7ccf96e6d36"
+        },
+        {
+          "location": "warehouse",
+          "step": "Warehouse",
+          "distance": 24,
+          "mode": "truck",
+          "co2": 8.77,
+          "timestamp": "2026-03-22T10:05:24.927Z",
+          "status": "Success",
+          "icon": "Warehouse",
+          "productId": "cfa5f54d-6d2f-438b-a6b5-e7ccf96e6d36"
+        },
+        {
+          "location": "transport",
+          "step": "Transport",
+          "distance": 42,
+          "mode": "train",
+          "co2": 9.21,
+          "timestamp": "2026-03-22T12:05:24.927Z",
+          "status": "Success",
+          "icon": "Transport",
+          "productId": "cfa5f54d-6d2f-438b-a6b5-e7ccf96e6d36"
+        },
+        {
+          "location": "delhi",
+          "step": "Destination",
+          "distance": 36,
+          "mode": "truck",
+          "co2": 13.16,
+          "timestamp": "2026-03-22T14:05:24.927Z",
+          "status": "Success",
+          "icon": "Destination",
+          "productId": "cfa5f54d-6d2f-438b-a6b5-e7ccf96e6d36"
+        }
+      ],
+      "hash": "908a50595e08d67711a0881881dbe8f55cd7e3ea816051b56f0d27026479d6bc",
+      "txHash": null,
+      "lastTraceDestination": "delhi",
+      "lastTraceGeneratedAt": "2026-03-22T08:05:24.927Z"
+    },
+    {
+      "id": "1cb47458-0214-4708-bde3-6c0aca0f9fd8",
+      "companyName": "greenfoods",
+      "productName": "Organic snack",
+      "co2Emission": 70,
+      "createdAt": "2026-03-22T08:11:29.703Z",
+      "journey": [
+        {
+          "location": "factory",
+          "step": "Factory",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 40.94,
+          "timestamp": "2026-03-22T08:23:50.813Z",
+          "status": "Success",
+          "icon": "Factory",
+          "productId": "1cb47458-0214-4708-bde3-6c0aca0f9fd8"
+        },
+        {
+          "location": "warehouse",
+          "step": "Warehouse",
+          "distance": 24,
+          "mode": "truck",
+          "co2": 8.19,
+          "timestamp": "2026-03-22T10:23:50.813Z",
+          "status": "Success",
+          "icon": "Warehouse",
+          "productId": "1cb47458-0214-4708-bde3-6c0aca0f9fd8"
+        },
+        {
+          "location": "transport",
+          "step": "Transport",
+          "distance": 42,
+          "mode": "train",
+          "co2": 8.6,
+          "timestamp": "2026-03-22T12:23:50.813Z",
+          "status": "Success",
+          "icon": "Transport",
+          "productId": "1cb47458-0214-4708-bde3-6c0aca0f9fd8"
+        },
+        {
+          "location": "Delhi",
+          "step": "Destination",
+          "distance": 36,
+          "mode": "truck",
+          "co2": 12.27,
+          "timestamp": "2026-03-22T14:23:50.813Z",
+          "status": "Success",
+          "icon": "Destination",
+          "productId": "1cb47458-0214-4708-bde3-6c0aca0f9fd8"
+        }
+      ],
+      "hash": "9e26d657c2e2facc5133267196bdfd1269c82b8d06f951c38aacf0bf938bbecb",
+      "txHash": null,
+      "lastTraceDestination": "Delhi",
+      "lastTraceGeneratedAt": "2026-03-22T08:23:50.813Z"
+    },
+    {
+      "id": "7c50b43b-153e-4e2f-b660-4bb24c71fd2e",
+      "companyName": "TestCorp",
+      "productName": "Widget",
+      "co2Emission": 50,
+      "createdAt": "2026-03-22T08:21:38.750Z",
+      "journey": [
+        {
+          "location": "factory",
+          "step": "Factory",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 29.24,
+          "timestamp": "2026-03-22T08:21:38.766Z",
+          "status": "Success",
+          "icon": "Factory",
+          "productId": "7c50b43b-153e-4e2f-b660-4bb24c71fd2e"
+        },
+        {
+          "location": "warehouse",
+          "step": "Warehouse",
+          "distance": 24,
+          "mode": "truck",
+          "co2": 5.85,
+          "timestamp": "2026-03-22T10:21:38.766Z",
+          "status": "Success",
+          "icon": "Warehouse",
+          "productId": "7c50b43b-153e-4e2f-b660-4bb24c71fd2e"
+        },
+        {
+          "location": "transport",
+          "step": "Transport",
+          "distance": 42,
+          "mode": "train",
+          "co2": 6.14,
+          "timestamp": "2026-03-22T12:21:38.766Z",
+          "status": "Success",
+          "icon": "Transport",
+          "productId": "7c50b43b-153e-4e2f-b660-4bb24c71fd2e"
+        },
+        {
+          "location": "delhi",
+          "step": "Destination",
+          "distance": 36,
+          "mode": "truck",
+          "co2": 8.77,
+          "timestamp": "2026-03-22T14:21:38.766Z",
+          "status": "Success",
+          "icon": "Destination",
+          "productId": "7c50b43b-153e-4e2f-b660-4bb24c71fd2e"
+        }
+      ],
+      "hash": "eeea61b22f9d7880f11dad068ee174cccbd2ceff03b8abf8a0a0ee27182caca4",
+      "txHash": null,
+      "lastTraceDestination": "delhi",
+      "lastTraceGeneratedAt": "2026-03-22T08:21:38.766Z"
+    },
+    {
+      "id": "3c597e9f-5b0d-4d93-8cdc-f61a18bc83bd",
+      "companyName": "TestCorp",
+      "productName": "Widget",
+      "co2Emission": 50,
+      "createdAt": "2026-03-22T08:22:07.561Z",
+      "journey": [
+        {
+          "location": "factory",
+          "step": "Factory",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 29.24,
+          "timestamp": "2026-03-22T08:22:07.574Z",
+          "status": "Success",
+          "icon": "Factory",
+          "productId": "3c597e9f-5b0d-4d93-8cdc-f61a18bc83bd"
+        },
+        {
+          "location": "warehouse",
+          "step": "Warehouse",
+          "distance": 24,
+          "mode": "truck",
+          "co2": 5.85,
+          "timestamp": "2026-03-22T10:22:07.574Z",
+          "status": "Success",
+          "icon": "Warehouse",
+          "productId": "3c597e9f-5b0d-4d93-8cdc-f61a18bc83bd"
+        },
+        {
+          "location": "transport",
+          "step": "Transport",
+          "distance": 42,
+          "mode": "train",
+          "co2": 6.14,
+          "timestamp": "2026-03-22T12:22:07.574Z",
+          "status": "Success",
+          "icon": "Transport",
+          "productId": "3c597e9f-5b0d-4d93-8cdc-f61a18bc83bd"
+        },
+        {
+          "location": "delhi",
+          "step": "Destination",
+          "distance": 36,
+          "mode": "truck",
+          "co2": 8.77,
+          "timestamp": "2026-03-22T14:22:07.574Z",
+          "status": "Success",
+          "icon": "Destination",
+          "productId": "3c597e9f-5b0d-4d93-8cdc-f61a18bc83bd"
+        }
+      ],
+      "hash": "16d83048be4973fb929e907d92f5df93898c0d9e8f3f5278651c4852bd95cb0a",
+      "txHash": null,
+      "lastTraceDestination": "delhi",
+      "lastTraceGeneratedAt": "2026-03-22T08:22:07.574Z"
+    },
+    {
+      "id": "96496b8e-f993-4343-ac45-c6d1e7688e16",
+      "companyName": "TestCorp",
+      "productName": "Widget",
+      "co2Emission": 50,
+      "createdAt": "2026-03-22T08:26:04.429Z",
+      "journey": [
+        {
+          "location": "factory",
+          "step": "Factory",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 2.63,
+          "timestamp": "2026-03-22T08:26:04.467Z",
+          "status": "Success",
+          "icon": "Factory",
+          "productId": "96496b8e-f993-4343-ac45-c6d1e7688e16"
+        },
+        {
+          "location": "warehouse",
+          "step": "Warehouse",
+          "distance": 24,
+          "mode": "truck",
+          "co2": 0.53,
+          "timestamp": "2026-03-22T10:26:04.467Z",
+          "status": "Success",
+          "icon": "Warehouse",
+          "productId": "96496b8e-f993-4343-ac45-c6d1e7688e16"
+        },
+        {
+          "location": "transport",
+          "step": "Transport",
+          "distance": 42,
+          "mode": "train",
+          "co2": 0.55,
+          "timestamp": "2026-03-22T12:26:04.467Z",
+          "status": "Success",
+          "icon": "Transport",
+          "productId": "96496b8e-f993-4343-ac45-c6d1e7688e16"
+        },
+        {
+          "location": "bangalore",
+          "step": "Destination",
+          "distance": 2110,
+          "mode": "truck",
+          "co2": 46.29,
+          "timestamp": "2026-03-22T14:26:04.467Z",
+          "status": "Success",
+          "icon": "Destination",
+          "productId": "96496b8e-f993-4343-ac45-c6d1e7688e16"
+        }
+      ],
+      "hash": "b141e5e4a009344f1902a290eea8d2afb14b60c68bd4e53d0bec94aae2a35b81",
+      "txHash": null,
+      "lastTraceDestination": "bangalore",
+      "lastTraceGeneratedAt": "2026-03-22T08:26:04.467Z"
+    },
+    {
+      "id": "8499d7d1-30dc-4e09-9b7b-86b600dbccd0",
+      "companyName": "TestCorp",
+      "productName": "Widget",
+      "co2Emission": 50,
+      "createdAt": "2026-03-22T08:26:19.140Z",
+      "journey": [
+        {
+          "location": "factory",
+          "step": "Factory",
+          "distance": 0,
+          "mode": "truck",
+          "co2": 2.63,
+          "timestamp": "2026-03-22T08:26:19.175Z",
+          "status": "Success",
+          "icon": "Factory",
+          "productId": ""
+        },
+        {
+          "location": "warehouse",
+          "step": "Warehouse",
+          "distance": 24,
+          "mode": "truck",
+          "co2": 0.53,
+          "timestamp": "2026-03-22T10:26:19.175Z",
+          "status": "Success",
+          "icon": "Warehouse",
+          "productId": ""
+        },
+        {
+          "location": "transport",
+          "step": "Transport",
+          "distance": 42,
+          "mode": "train",
+          "co2": 0.55,
+          "timestamp": "2026-03-22T12:26:19.175Z",
+          "status": "Success",
+          "icon": "Transport",
+          "productId": ""
+        },
+        {
+          "location": "bangalore",
+          "step": "Destination",
+          "distance": 2110,
+          "mode": "truck",
+          "co2": 46.29,
+          "timestamp": "2026-03-22T14:26:19.175Z",
+          "status": "Success",
+          "icon": "Destination",
+          "productId": ""
+        }
+      ],
+      "hash": "3f39a72ba3139a433eb438e5f940924d086838c355b795c765c5b487def84b24",
+      "txHash": null,
+      "lastTraceDestination": "bangalore",
+      "lastTraceGeneratedAt": "2026-03-22T08:26:19.175Z"
     }
   ]
 }
