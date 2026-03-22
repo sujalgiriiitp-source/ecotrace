@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>EcoTrace Journey</title>
+    <title>Trace Journey • EcoTrace</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -12,116 +12,176 @@
     />
     <link rel="stylesheet" href="style.css" />
     <style>
-      .timeline {
-        position: relative;
-        margin-top: 14px;
-        padding-left: 28px;
+      .trace-wrap {
+        max-width: 900px;
+        margin: 36px auto;
       }
 
-      .timeline::before {
+      .trace-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .trace-title {
+        margin: 0;
+        color: var(--accent);
+        letter-spacing: 0.3px;
+      }
+
+      .trace-meta {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 10px;
+        margin: 12px 0 18px;
+      }
+
+      .trace-meta-item {
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        padding: 10px 12px;
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .trace-meta-item span {
+        color: var(--muted);
+        display: block;
+        font-size: 0.85rem;
+      }
+
+      .trace-meta-item strong {
+        font-size: 0.98rem;
+      }
+
+      .trace-loading,
+      .trace-empty,
+      .trace-error {
+        padding: 12px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .trace-error {
+        border-color: rgba(255, 77, 79, 0.4);
+        color: #ff9fa0;
+      }
+
+      .trace-timeline {
+        position: relative;
+        margin-top: 8px;
+        padding-left: 30px;
+      }
+
+      .trace-timeline::before {
         content: '';
         position: absolute;
-        left: 10px;
+        left: 11px;
         top: 0;
         bottom: 0;
         width: 2px;
-        background: linear-gradient(180deg, rgba(0, 255, 159, 0.5), rgba(0, 195, 255, 0.35));
+        background: linear-gradient(180deg, rgba(0, 255, 159, 0.6), rgba(0, 195, 255, 0.3));
       }
 
-      .timeline-item {
+      .trace-step {
         position: relative;
         margin-bottom: 14px;
+        animation: traceFadeIn 0.35s ease both;
       }
 
-      .timeline-dot {
+      .trace-step-dot {
         position: absolute;
-        left: -22px;
-        top: 14px;
+        left: -21px;
+        top: 16px;
         width: 10px;
         height: 10px;
         border-radius: 50%;
         background: #00ff88;
-        box-shadow: 0 0 10px rgba(0, 255, 136, 0.55);
+        box-shadow: 0 0 12px rgba(0, 255, 136, 0.4);
       }
 
-      .timeline-dot.tampered {
+      .trace-step-dot.pending {
+        background: #ffd666;
+        box-shadow: 0 0 12px rgba(255, 214, 102, 0.4);
+      }
+
+      .trace-step-dot.failed {
         background: #ff4d4f;
-        box-shadow: 0 0 10px rgba(255, 77, 79, 0.5);
+        box-shadow: 0 0 12px rgba(255, 77, 79, 0.4);
       }
 
-      .timeline-card {
-        border: 1px solid rgba(255, 255, 255, 0.09);
+      .trace-step-card {
+        border: 1px solid rgba(255, 255, 255, 0.11);
         border-radius: 12px;
         padding: 12px 14px;
         background: rgba(255, 255, 255, 0.03);
       }
 
-      .timeline-row {
+      .trace-step-row {
         display: flex;
         justify-content: space-between;
-        gap: 10px;
+        gap: 14px;
         margin-bottom: 6px;
       }
 
-      .timeline-row:last-child {
+      .trace-step-row:last-child {
         margin-bottom: 0;
       }
 
-      .timeline-label {
+      .trace-step-label {
         color: var(--muted);
       }
 
-      .timeline-status {
+      .status-badge {
         font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 999px;
+        border: 1px solid transparent;
       }
 
-      .timeline-status.verified {
+      .status-success {
         color: #00ff88;
+        background: rgba(0, 255, 136, 0.1);
+        border-color: rgba(0, 255, 136, 0.35);
       }
 
-      .timeline-status.tampered {
+      .status-pending {
+        color: #ffd666;
+        background: rgba(255, 214, 102, 0.12);
+        border-color: rgba(255, 214, 102, 0.35);
+      }
+
+      .status-failed {
         color: #ff4d4f;
+        background: rgba(255, 77, 79, 0.1);
+        border-color: rgba(255, 77, 79, 0.35);
+      }
+
+      @keyframes traceFadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
     </style>
   </head>
   <body>
-    <div class="particle-bg">
-      <div class="particle"></div>
-      <div class="particle"></div>
-      <div class="particle"></div>
-      <div class="particle"></div>
-      <div class="particle"></div>
-    </div>
-
-    <main class="container verify-page">
-      <section class="card verify-card" style="max-width: 760px;">
-        <div class="verify-header">
-          <h1>🧭 Trace Journey</h1>
-          <p class="verify-subtitle">Product lifecycle transparency</p>
-          <a href="index.html" class="back-btn">← Back to Dashboard</a>
+    <main class="container trace-wrap">
+      <section class="card">
+        <div class="trace-header">
+          <h1 class="trace-title">Trace Journey</h1>
+          <a href="index.html" class="copy-btn" style="text-decoration:none;">← Back to Dashboard</a>
         </div>
 
-        <p id="traceError" class="status-message error hidden"></p>
-
-        <div id="traceContent" class="hidden">
-          <div class="verify-details">
-            <div class="verify-row">
-              <span class="verify-label">🏢 Company</span>
-              <strong id="tCompany"></strong>
-            </div>
-            <div class="verify-row">
-              <span class="verify-label">📦 Product</span>
-              <strong id="tProduct"></strong>
-            </div>
-            <div class="verify-row">
-              <span class="verify-label">🌍 Total CO2</span>
-              <strong id="tTotalCo2"></strong>
-            </div>
-          </div>
-
-          <h3 style="margin: 18px 0 10px; color: var(--accent);">Journey Steps</h3>
-          <div id="journeyList" class="timeline"></div>
-        </div>
+        <div id="traceMeta" class="trace-meta"></div>
+        <div id="traceState" class="trace-loading">Loading trace journey...</div>
+        <div id="timeline" class="trace-timeline" aria-live="polite"></div>
       </section>
     </main>
 

@@ -311,6 +311,11 @@ body {
   backdrop-filter: blur(12px);
   border: 1px solid rgba(0, 255, 159, 0.2);
   border-radius: var(--radius);
+
+.valid {
+  color: #00ff88;
+}
+
   padding: 25px;
   display: flex;
   align-items: center;

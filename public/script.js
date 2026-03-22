@@ -202,9 +202,6 @@ function createEntryCard(entry) {
     ${blockchainMeta}
     <p class="immutable-mini">Immutable Record – Cannot be Modified</p>
     <p style="margin-top: 12px;"><a href="${verificationLink}" target="_blank" rel="noopener noreferrer">→ Verify & View Details</a></p>
-    <div class="entry-actions">
-      <button type="button" class="copy-btn mini-copy trace-journey" data-id="${entry.id}">🧭 View Trace Journey</button>
-    </div>
     <div class="qr-box" id="qr-${CSS.escape(entry.id)}"></div>
     <p class="qr-label">Scan to Verify</p>
     <div class="entry-actions">
@@ -230,6 +227,19 @@ function createEntryCard(entry) {
   }
 
   attachTilt(card);
+
+  const traceBtn = document.createElement('button');
+  traceBtn.innerText = 'View Trace Journey';
+  traceBtn.onclick = () => {
+    window.location.href = `/trace.html?id=${entry.id}`;
+  };
+  traceBtn.className = 'copy-btn mini-copy';
+  const actionsContainer = card.querySelector('.entry-actions');
+  if (actionsContainer) {
+    actionsContainer.prepend(traceBtn);
+  } else {
+    card.appendChild(traceBtn);
+  }
 
   // Make card clickable for verification
   card.style.cursor = 'pointer';
@@ -601,7 +611,8 @@ async function addEntry(event) {
       companyName: result.data.companyName,
       productName: result.data.productName,
       co2Emission: result.data.co2Emission,
-      createdAt: result.data.createdAt
+      createdAt: result.data.createdAt,
+      journey: Array.isArray(result.data.journey) ? result.data.journey : []
     });
 
     displayedEntries = [...entries];
@@ -682,15 +693,6 @@ if (importBtn && csvInput) {
 entriesContainer.addEventListener('click', (event) => {
   const target = event.target;
   if (!(target instanceof HTMLElement)) {
-    return;
-  }
-
-  if (target.matches('.trace-journey')) {
-    const traceId = target.getAttribute('data-id');
-    if (!traceId) {
-      return;
-    }
-    window.location.href = `/trace.html?id=${encodeURIComponent(traceId)}`;
     return;
   }
 

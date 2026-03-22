@@ -137,35 +137,20 @@ function generateHash(entry) {
   return crypto.createHash('sha256').update(payload).digest('hex');
 }
 
-function buildDefaultJourney(totalEmission, baseTimestamp = new Date().toISOString()) {
-  const emission = Number(totalEmission) || 0;
-  const production = Number((emission * 0.4).toFixed(2));
-  const transport = Number((emission * 0.2).toFixed(2));
-  const storage = Number((emission * 0.2).toFixed(2));
-  const delivered = Number((emission - production - transport - storage).toFixed(2));
-
-  return [
-    { location: 'Factory', step: 'Production', co2: production, timestamp: baseTimestamp, status: 'Verified' },
-    { location: 'Transit Hub', step: 'Transport', co2: transport, timestamp: baseTimestamp, status: 'Verified' },
-    { location: 'Warehouse', step: 'Storage', co2: storage, timestamp: baseTimestamp, status: 'Verified' },
-    { location: 'City', step: 'Delivery', co2: delivered, timestamp: baseTimestamp, status: 'Verified' }
-  ];
-}
-
 function normalizeJourney(entry) {
   if (!Array.isArray(entry.journey) || entry.journey.length === 0) {
-    return buildDefaultJourney(entry.co2Emission, entry.createdAt || new Date().toISOString());
+    return [];
   }
 
   return entry.journey.map((step, index) => {
-    const rawStatus = String(step.status || '').trim();
-    const normalizedStatus = /verified|success|tampered|failed/i.test(rawStatus)
+    const rawStatus = String(step.status || 'Pending').trim();
+    const normalizedStatus = ['Success', 'Pending', 'Failed'].includes(rawStatus)
       ? rawStatus
-      : 'Success';
+      : 'Pending';
 
     return {
       location: step.location || 'Unknown',
-      step: step.step || rawStatus || `Step ${index + 1}`,
+      step: step.step || `Step ${index + 1}`,
       co2: Number(step.co2) || 0,
       timestamp: step.timestamp || entry.createdAt || new Date().toISOString(),
       status: normalizedStatus
@@ -198,7 +183,7 @@ app.post('/add', async (req, res) => {
       productName: String(productName).trim(),
       co2Emission: parsedEmission,
       createdAt: new Date().toISOString(),
-      journey: Array.isArray(journey) && journey.length > 0 ? journey : buildDefaultJourney(parsedEmission)
+      journey: Array.isArray(journey) ? journey : []
     };
 
     entry.journey = normalizeJourney(entry);
@@ -271,6 +256,29 @@ app.get('/entries', async (req, res) => {
     return res.status(500).json({
       success: false,
       message: 'Failed to fetch entries.'
+    });
+  }
+});
+
+app.get('/entries/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const db = await readDatabase();
+    const entry = db.entries.find((item) => item.id === id);
+
+    if (!entry) {
+      return res.status(404).json({
+        success: false,
+        message: 'Record not found.'
+      });
+    }
+
+    return res.json({ success: true, data: entry });
+  } catch (error) {
+    console.error('GET /entries/:id error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch entry.'
     });
   }
 });

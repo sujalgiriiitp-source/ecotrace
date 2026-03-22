@@ -1,78 +1,112 @@
-async function loadTrace() {
+function normalizeStatus(status) {
+  const value = String(status || 'Pending').trim();
+  if (value === 'Success' || value === 'Pending' || value === 'Failed') {
+    return value;
+  }
+  return 'Pending';
+}
+
+function statusClass(status) {
+  if (status === 'Success') return 'status-success';
+  if (status === 'Failed') return 'status-failed';
+  return 'status-pending';
+}
+
+function dotClass(status) {
+  if (status === 'Failed') return 'failed';
+  if (status === 'Pending') return 'pending';
+  return '';
+}
+
+function renderMeta(item) {
+  const meta = document.getElementById('traceMeta');
+  if (!meta) return;
+
+  meta.innerHTML = `
+    <div class="trace-meta-item"><span>Company</span><strong>${item.companyName || 'N/A'}</strong></div>
+    <div class="trace-meta-item"><span>Product</span><strong>${item.productName || 'N/A'}</strong></div>
+    <div class="trace-meta-item"><span>ID</span><strong>${item.id || 'N/A'}</strong></div>
+  `;
+}
+
+function setState(message, type = 'loading') {
+  const state = document.getElementById('traceState');
+  if (!state) return;
+
+  state.className = `trace-${type}`;
+  state.textContent = message;
+}
+
+function renderTimeline(journey) {
+  const container = document.getElementById('timeline');
+  if (!container) return;
+
+  container.innerHTML = '';
+  if (!Array.isArray(journey) || journey.length === 0) {
+    setState('No journey available', 'empty');
+    return;
+  }
+
+  setState('', 'loading');
+  const state = document.getElementById('traceState');
+  if (state) {
+    state.style.display = 'none';
+  }
+
+  journey.forEach((step, index) => {
+    const status = normalizeStatus(step.status);
+    const co2Value = Number(step.co2) || 0;
+    const formattedTime = step.timestamp ? new Date(step.timestamp).toLocaleString() : 'N/A';
+
+    const node = document.createElement('article');
+    node.className = 'trace-step';
+    node.style.animationDelay = `${index * 0.06}s`;
+    node.innerHTML = `
+      <span class="trace-step-dot ${dotClass(status)}"></span>
+      <div class="trace-step-card">
+        <div class="trace-step-row"><span class="trace-step-label">Location</span><strong>${step.location || 'Unknown'}</strong></div>
+        <div class="trace-step-row"><span class="trace-step-label">Step</span><span>${step.step || 'Unknown'}</span></div>
+        <div class="trace-step-row"><span class="trace-step-label">CO2</span><span>${co2Value.toFixed(2)} kg</span></div>
+        <div class="trace-step-row"><span class="trace-step-label">Timestamp</span><span>${formattedTime}</span></div>
+        <div class="trace-step-row"><span class="trace-step-label">Status</span><span class="status-badge ${statusClass(status)}">${status}</span></div>
+      </div>
+    `;
+    container.appendChild(node);
+  });
+}
+
+async function loadTraceJourney() {
   const params = new URLSearchParams(window.location.search);
   const id = params.get('id');
 
-  const errorEl = document.getElementById('traceError');
-  const contentEl = document.getElementById('traceContent');
-  const journeyList = document.getElementById('journeyList');
-
-  if (!errorEl || !contentEl || !journeyList) {
-    return;
-  }
-
   if (!id) {
-    errorEl.textContent = '❌ Missing record ID in URL.';
-    errorEl.classList.remove('hidden');
+    setState('Record not found', 'error');
     return;
   }
+
+  setState('Loading trace journey...', 'loading');
 
   try {
     const response = await fetch('/entries');
-    const result = await response.json();
+    const payload = await response.json();
 
-    if (!response.ok || !result?.success) {
-      throw new Error('Failed to load trace entries.');
+    if (!response.ok || !payload?.success) {
+      throw new Error('Failed to load entries');
     }
 
-    const entries = Array.isArray(result.data) ? result.data : [];
+    const entries = Array.isArray(payload.data) ? payload.data : [];
     const item = entries.find((entry) => entry.id === id);
 
     if (!item) {
-      errorEl.textContent = 'Record not found ❌';
-      errorEl.classList.remove('hidden');
+      setState('Record not found', 'error');
       return;
     }
 
-    document.getElementById('tCompany').textContent = item.companyName || 'N/A';
-    document.getElementById('tProduct').textContent = item.productName || 'N/A';
-
-    const journey = Array.isArray(item.journey) ? item.journey : [];
-    const totalFromJourney = journey.reduce((sum, step) => sum + (Number(step.co2) || 0), 0);
-    const total = totalFromJourney > 0 ? totalFromJourney : Number(item.co2Emission || 0);
-    document.getElementById('tTotalCo2').textContent = `${total.toFixed(2)} kg`;
-
-    journeyList.innerHTML = '';
-    if (journey.length === 0) {
-      journeyList.innerHTML = '<p class="muted">No journey data available.</p>';
-    } else {
-      journey.forEach((step) => {
-        const co2 = Number(step.co2) || 0;
-        const status = String(step.status || 'Success');
-        const isStepVerified = /verified|success/i.test(status) && !/tampered|failed/i.test(status);
-        const statusClass = isStepVerified ? 'verified' : 'tampered';
-        const timeValue = step.timestamp ? new Date(step.timestamp).toLocaleString() : 'N/A';
-
-        const itemEl = document.createElement('div');
-        itemEl.className = 'timeline-item';
-        itemEl.innerHTML = `
-          <span class="timeline-dot ${isStepVerified ? '' : 'tampered'}"></span>
-          <div class="timeline-card">
-            <div class="timeline-row"><span class="timeline-label">Location</span><strong>${step.location || 'Unknown'}</strong></div>
-            <div class="timeline-row"><span class="timeline-label">Step</span><span>${step.step || 'Unknown'}</span></div>
-            <div class="timeline-row"><span class="timeline-label">CO2</span><span>${co2.toFixed(2)} kg</span></div>
-            <div class="timeline-row"><span class="timeline-label">Timestamp</span><span>${timeValue}</span></div>
-            <div class="timeline-row"><span class="timeline-label">Status</span><span class="timeline-status ${statusClass}">${isStepVerified ? 'Verified' : 'Tampered'}</span></div>
-          </div>
-        `;
-        journeyList.appendChild(itemEl);
-      });
-    }
-
-    contentEl.classList.remove('hidden');
+    renderMeta(item);
+    renderTimeline(item.journey || []);
   } catch (error) {
-    errorEl.textContent = `❌ ${error.message}`;
-    errorEl.classList.remove('hidden');
+    setState(error.message || 'Something went wrong while loading trace', 'error');
   }
 }
 
-document.addEventListener('DOMContentLoaded', loadTrace);
+document.addEventListener('DOMContentLoaded', loadTraceJourney);
